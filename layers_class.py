@@ -78,6 +78,7 @@ class Base_solver_class:
     def __init__(self, Bw, Bb):
         self.Bw = Bw
         self.Bb = Bb
+        self._make_requirement_list()
 
     def compute_new_weights(self, scp: SolverComputeParams):
         new_weights = []
@@ -97,9 +98,16 @@ class Base_solver_class:
         ss.new_layers_weights = self.compute_new_weights(scp)
         return ss
 
-    def make_requirement_list(self, layers: List[LayerBase]):
+    def _check_for_all_requirements(self, scp: SolverComputeParams):
+        pass
+
+    def get_requirements(self):
+        return self.s_req
+
+    def _make_requirement_list(self):
         sr = SolverRequirements()
         sr.biases_grad = True
         sr.weights_grad = True
         sr.previous_layer_biases = True
         sr.previous_layer_weights = True
+        self.s_req = sr
