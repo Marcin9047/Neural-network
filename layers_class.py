@@ -26,7 +26,10 @@ class LayerBase:
         self.last_activation = None
 
     def compute_deriv_w(self, arguments_todo) -> array:
-        return None
+        pass
+
+    def compute_deriv_a(self, arguments_todo) -> array:
+        pass
 
     def compute_activation(self, a0: array):
         value = self.activation_function.get_output(self.w, a0, self.b)
@@ -45,10 +48,58 @@ class Cost_function:
         return 2(a_output - y_pref)
 
 
-class Gradient_descent:
+class SolverRequirements:
+    def __init__(self):
+        self.weights_grad = False
+        self.biases_grad = False
+        self.layers = False
+        self.previous_layer_weights = False
+        self.previous_layer_biases = False
+
+
+class SolverComputeParams:
+    def __init__(self):
+        # List[array]
+        self.layers_weights = None
+        self.layers_biases = None
+        self.weights_grad = None
+        self.biases_grad = None
+        # List[LayerBase]
+        self.layers = None
+
+
+class SolverSolves:
+    def __init__(self):
+        self.new_layers_weights = None
+        self.new_layers_biases = None
+
+
+class Base_solver_class:
     def __init__(self, Bw, Bb):
         self.Bw = Bw
         self.Bb = Bb
 
-    def compute_new_weights(self, weights: List[array], weigths_deriv: List[array]):
+    def compute_new_weights(self, scp: SolverComputeParams):
         new_weights = []
+        for ix, w in enumerate(scp.layers_weights):
+            new_weights.append(w - (self.Bw * scp.weights_grad[ix]))
+        return new_weights
+
+    def compute_new_bias(self, scp: SolverComputeParams):
+        new_biases = []
+        for ix, w in enumerate(scp.layers_biases):
+            new_biases.append(w - (self.Bw * scp.biases_grad[ix]))
+        return new_biases
+
+    def compute_solves(self, scp: SolverComputeParams):
+        ss = SolverSolves()
+        ss.new_layers_biases = self.compute_new_bias(scp)
+        ss.new_layers_weights = self.compute_new_weights(scp)
+        return ss
+
+    def make_requirement_list(self, layers: List[LayerBase]):
+        sr = SolverRequirements()
+        sr.biases_grad = True
+        sr.weights_grad = True
+        sr.previous_layer_biases = True
+        sr.previous_layer_weights = True
