@@ -88,7 +88,7 @@ class Base_solver_class:
     def compute_new_bias(self, scp: SolverComputeParams):
         new_biases = []
         for ix, w in enumerate(scp.layers_biases):
-            new_biases.append(w - (self.Bw * scp.biases_grad[ix]))
+            new_biases.append(w - (self.Bb * scp.biases_grad[ix]))
         return new_biases
 
     def compute_solves(self, scp: SolverComputeParams):
