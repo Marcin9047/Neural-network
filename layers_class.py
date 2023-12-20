@@ -11,7 +11,7 @@ class Layer_function:
         value = np.dot(weights.T, input_activation) + bias
         return value
 
-    def get_deriv_output_to_input_a(self, stuff):
+    def get_deriv_output_to_w_input_a(self, stuff):
         pass
 
 
@@ -28,8 +28,17 @@ class LayerBase:
     def compute_deriv_w(self, arguments_todo) -> array:
         pass
 
-    def compute_deriv_a(self, arguments_todo) -> array:
-        pass
+    def compute_deriv_w_after_s(self, next_layer_deriv_w_after_s: array) -> array:
+        # @TODO add function deriv to full derivative
+        wector_of_activ = np.zeros(self.neuron_size)
+        for i, activation_deriv_layer_per_n in enumerate(next_layer_deriv_w_after_s):
+            wector_of_activ[i] = np.sum(activation_deriv_layer_per_n)
+
+        new_deriv = np.zeros(self.w_size)
+        for i_n in range(self.neuron_size):
+            for i_a in range(self.activation_size):
+                new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
+        return new_deriv
 
     def compute_activation(self, a0: array):
         value = self.activation_function.get_output(self.w, a0, self.b)
@@ -45,7 +54,7 @@ class Cost_function:
         return (a_output - y_pref) ** 2
 
     def get_deriv_cost_to_a_output(self, y_pref, a_output):
-        return 2(a_output - y_pref)
+        return 2 * (a_output - y_pref)
 
 
 class SolverRequirements:
@@ -113,3 +122,39 @@ class Base_solver_class:
         sr.previous_layer_biases = True
         sr.previous_layer_weights = True
         self.s_req = sr
+
+
+def testing_func(x):
+    val = (x**2) * np.sin(x)
+    val += 100 * np.sin(x) * np.cos(x)
+    return val
+
+
+if __name__ == "__main__":
+    f = Layer_function()
+    l1 = LayerBase(3, 1, f)
+    l2 = LayerBase(5, 3, f)
+    l_out = LayerBase(1, 5, f)
+    a_1 = l1.compute_activation(np.array([1]))
+    a_2 = l2.compute_activation(a_1)
+    a_out = l_out.compute_activation(a_2)
+
+    x = 1
+    y = testing_func(x)
+    print(x, y)
+
+    c_f = Cost_function()
+    e_l = c_f.get_cost(y, float(a_out))
+    de_da_l = c_f.get_deriv_cost_to_a_output(y, float(a_out))
+    deriv_w_l_out = l_out.compute_deriv_w_after_s(array([de_da_l]))
+    deriv_w_l_2 = l2.compute_deriv_w_after_s(deriv_w_l_out)
+    deriv_w_l_1 = l1.compute_deriv_w_after_s(deriv_w_l_2)
+
+    print("l1", a_1, "\nw1:\n", l1.w, "\ndw1:\n", deriv_w_l_1)
+    print("\n")
+    print("l2", a_2, "\nw2:\n", l2.w, "\ndw2:\n", deriv_w_l_2)
+    print("\n")
+    print("lout", a_out, "\nw out:\n", l_out.w, "\nd out:\n", deriv_w_l_out)
+    print("\n")
+    print("deriv_of_y")
+    print(e_l, de_da_l)
