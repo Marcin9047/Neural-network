@@ -55,6 +55,8 @@ class SolverRequirements:
         self.layers = False
         self.previous_layer_weights = False
         self.previous_layer_biases = False
+        self.cost_per_layer = False
+        self.abs_cost = False
 
 
 class SolverComputeParams:
@@ -98,7 +100,7 @@ class Base_solver_class:
         ss.new_layers_weights = self.compute_new_weights(scp)
         return ss
 
-    def _check_for_all_requirements(self, scp: SolverComputeParams):
+    def _check_for_requirements(self, scp: SolverComputeParams):
         pass
 
     def get_requirements(self):
