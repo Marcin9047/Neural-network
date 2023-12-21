@@ -317,7 +317,7 @@ if __name__ == "__main__":
     from matplotlib import pyplot as plt
 
     plt.plot(cost_his)
-    plt.show
+    plt.show()
     # w = l2.b
     # w_flat = n_manage._convert_w_to_list(w)
     # re_w = n_manage._convert_list_to_w(w_flat, l2.w_size)
