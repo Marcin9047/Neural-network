@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import array
 from typing import List, Tuple, Callable
+from scipy.optimize import minimize
 
 
 class Layer_function:
@@ -16,14 +17,25 @@ class Layer_function:
 
 
 class LayerBase:
-    def __init__(self, neuron_size, activation_size, wraping_function: Layer_function):
+    def __init__(
+        self,
+        neuron_size,
+        activation_size,
+        wraping_function: Layer_function,
+        log_changes=False,
+    ):
         self.w_size = (activation_size, neuron_size)
         self.neuron_size = neuron_size
         self.activation_size = activation_size
         self.activation_function = wraping_function
         self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
-        self.w_history = [self.w]
+        self.log_changes = log_changes
+        if self.log_changes:
+            self.w_history = [self.w]
         self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
+        if self.log_changes:
+            self.b_history = [self.b]
+        self.b_size = self.neuron_size
         self.last_activation = None
         self.last_output = None
         self.full_size_of_w = self.neuron_size * self.activation_size
@@ -44,17 +56,18 @@ class LayerBase:
         return new_deriv
 
     def compute_activation(self, a0: array):
-        if len(a0) != self.activation_size:
-            raise ValueError("Layer input is different size than activation size")
+        # if len(a0) != self.activation_size:
+        #     raise ValueError("Layer input is different size than activation size")
         self.last_activation = a0
         value = self.activation_function.get_output(self.w, a0, self.b)
         self.last_output = value
         return value
 
     def update_w(self, new_w: array):
-        self.w_history.append(new_w)
-        if new_w.size != self.w_size:
-            raise ValueError("new weights are a different shape than old weights")
+        if self.log_changes:
+            self.w_history.append(new_w)
+        # if new_w.size != self.w_size:
+        #     raise ValueError("new weights are a different shape than old weights")
         self.w = new_w
 
     def update_w_with_flat(self, new_flat_w: array):
@@ -64,6 +77,15 @@ class LayerBase:
             )
         new_w = new_flat_w.reshape(self.w_size)
         self.update_w(new_w)
+
+    def update_b_with_flat(self, new_flat_bias: array):
+        if len(self.b) != len(new_flat_bias):
+            raise ValueError(
+                "there are different number of bias_n than in the old bias"
+            )
+        if self.log_changes:
+            self.b_history.append(new_flat_bias)
+        self.b = new_flat_bias
 
 
 class Cost_function:
@@ -82,14 +104,18 @@ class BaseNeuralNetwork:
         self.layers = list_of_layers
         self.layer_number = len(list_of_layers)
         self.input_size = list_of_layers[0].activation_size
+        self.activations_hist = []
+        self.flat_w_size = len(self.get_flattened_weights())
+        self.flat_b_size = len(self.get_flattened_bias())
 
     def calculate_output(self, x: array):
         a = x
-        self.last_activations = []
-        self.last_activations.append(a)
+        last_activations = []
+        last_activations.append(a)
         for ix, layer in enumerate(self.layers):
             a = layer.compute_activation(a)
-            self.last_activations.append(a)
+            last_activations.append(a)
+        self.activations_hist.append[last_activations]
         return a
 
     def _convert_w_to_list(self, w: array) -> array:
@@ -112,6 +138,38 @@ class BaseNeuralNetwork:
             full_weights.append(self._convert_w_to_list(layer.w))
         return np.concatenate(full_weights)
 
+    def get_flattened_bias(self):
+        full_bias = []
+        for layer in self.layers:
+            full_bias.append(layer.b)
+        return np.concatenate(full_bias)
+
+    def get_flattened_ws_bs(self):
+        ws = self.get_flattened_weights()
+        bs = self.get_flattened_bias()
+        # print(ws)
+        # print(bs)
+        all_s = []
+        for w in ws:
+            all_s.append(w)
+        for b in bs:
+            all_s.append(b)
+        return array(all_s)
+
+    def update_with_flattened_bias(self, flattened_bias: array):
+        flat_sizes = []
+        for layer in self.layers:
+            flat_sizes.append(layer.b_size)
+        vector_list = np.split(flattened_bias, np.cumsum(flat_sizes)[:-1])
+        for i in range(len(self.layers)):
+            self.layers[i].update_b_with_flat(vector_list[i])
+
+    def update_with_flattened_w_and_b(self, flattened_w_b: array):
+        flat_ws = flattened_w_b[: self.flat_w_size]
+        flat_bs = flattened_w_b[self.flat_w_size :]
+        self.update_with_flattened_bias(flat_bs)
+        self.update_with_flattened_weights(flat_ws)
+
     # def _convert_list_of_flat_ws_to_ws(self, flattened_ws: array):
     #     flat_sizes = []
     #     tuple_sizes = []
@@ -123,13 +181,13 @@ class BaseNeuralNetwork:
     #     rel_ws = []
     #     for i, vector_w in enumerate(vector_list):
     #         rel_ws.append()
-    def update_with_flattened_weights(self, flattened_ws:array):
+    def update_with_flattened_weights(self, flattened_ws: array):
         flat_sizes = []
         for layer in self.layers:
             flat_sizes.append(layer.full_size_of_w)
         vector_list = np.split(flattened_ws, np.cumsum(flat_sizes)[:-1])
-        for i, layer in enumerate(self.layers):
-            
+        for i in range(len(self.layers)):
+            self.layers[i].update_w_with_flat(vector_list[i])
 
 
 # class SolverRequirements:
@@ -199,24 +257,64 @@ class BaseNeuralNetwork:
 #         self.s_req = sr
 
 
-# def testing_func(x):
-#     val = (x**2) * np.sin(x)
-#     val += 100 * np.sin(x) * np.cos(x)
-#     return val
+def testing_func(x):
+    val = (x**2) * np.sin(x)
+    val += 100 * np.sin(x) * np.cos(x)
+    return val
+
+
+def optimise_with_scipy(iter_limit, n_m: BaseNeuralNetwork, limits, nr_per_iter: int):
+    cf = Cost_function()
+    amplitude = limits[1] - limits[0]
+    cost_history = []
+
+    def cost_func(params: array):
+        n_m.update_with_flattened_w_and_b(params)
+        random_list = np.random.rand(nr_per_iter)
+        x_list = (random_list * amplitude) + limits[0]
+        y_list = testing_func(x_list)
+        y_pred = []
+        cost = 0
+        for x in x_list:
+            y_pred.append(n_m.calculate_output(x))
+        cost += cf.get_cost(y_list, np.array(y_pred))
+        cost_history.append(cost)
+        return cost / nr_per_iter
+
+    # cf.get_cost()
+    # cost_func = cf.get_cost
+    params_init = n_m.get_flattened_ws_bs()
+    # print(params_init)
+    mini_result = minimize(
+        cost_func,
+        params_init,
+        method="L-BFGS-B",
+        options={"maxiter": iter_limit},
+    )
+
+    return mini_result, n_m.activations_hist, cost_history
 
 
 if __name__ == "__main__":
     f = Layer_function()
-    l1 = LayerBase(3, 1, f)
-    l2 = LayerBase(5, 3, f)
-    l_out = LayerBase(1, 5, f)
+    l1 = LayerBase(2, 1, f)
+    l2 = LayerBase(3, 2, f)
+    l_out = LayerBase(1, 3, f)
 
     n_manage = BaseNeuralNetwork([l1, l2, l_out])
-    w = l2.w
-    w_flat = n_manage._convert_w_to_list(w)
-    re_w = n_manage._convert_list_to_w(w_flat, l2.w_size)
-    print(f"{w}\n\n{w_flat}\n\n{re_w}")
-    print((w - re_w))
+    mini_result, activations_hist, cost_his = optimise_with_scipy(
+        100, n_manage, (-1, 1), 10
+    )
+    print(mini_result)
+    from matplotlib import pyplot as plt
+
+    plt.plot(cost_his)
+    plt.show
+    # w = l2.b
+    # w_flat = n_manage._convert_w_to_list(w)
+    # re_w = n_manage._convert_list_to_w(w_flat, l2.w_size)
+    # print(f"{w}\n\n{w_flat}\n\n{re_w}")
+    # print((w - re_w))
 #     a_1 = l1.compute_activation(np.array([1]))
 #     a_2 = l2.compute_activation(a_1)
 #     a_out = l_out.compute_activation(a_2)
