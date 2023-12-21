@@ -9,8 +9,13 @@ class Layer_function:
         pass
 
     def get_output(self, weights: array, input_activation: array, bias: array):
-        value = np.dot(weights.T, input_activation) + bias
-        return value
+        # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}")
+        value = np.dot(input_activation, weights)
+        # print(f"value:\n{value}")
+        value += bias
+        # print(f"value + bias:\n{value}")
+        # @TODO SHIT
+        return np.array(value)
 
     def get_deriv_output_to_w_input_a(self, stuff):
         pass
@@ -95,6 +100,9 @@ class Cost_function:
     def get_cost(self, y_pref, a_output):
         return (a_output - y_pref) ** 2
 
+    def get_float_cost(self, y_pref, a_output):
+        return np.linalg.norm(self.get_cost(y_pref, a_output))
+
     def get_deriv_cost_to_a_output(self, y_pref, a_output):
         return 2 * (a_output - y_pref)
 
@@ -110,12 +118,12 @@ class BaseNeuralNetwork:
 
     def calculate_output(self, x: array):
         a = x
-        last_activations = []
-        last_activations.append(a)
+        activations = []
+        activations.append(a)
         for ix, layer in enumerate(self.layers):
             a = layer.compute_activation(a)
-            last_activations.append(a)
-        self.activations_hist.append[last_activations]
+            activations.append(a)
+        self.activations_hist.append(activations)
         return a
 
     def _convert_w_to_list(self, w: array) -> array:
@@ -277,7 +285,7 @@ def optimise_with_scipy(iter_limit, n_m: BaseNeuralNetwork, limits, nr_per_iter:
         cost = 0
         for x in x_list:
             y_pred.append(n_m.calculate_output(x))
-        cost += cf.get_cost(y_list, np.array(y_pred))
+        cost += cf.get_float_cost(y_list, np.array(y_pred))
         cost_history.append(cost)
         return cost / nr_per_iter
 
