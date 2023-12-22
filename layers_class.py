@@ -310,9 +310,11 @@ def optimise_with_scipy(
     #     cost_func,
     #     params_init,
     # )
-    es = cma.CMAEvolutionStrategy(params_init, 0.5, {"maxiter": max_iter})
+    es = cma.CMAEvolutionStrategy(
+        params_init, sigma0=0.10, {"popsize"=255, "weight_decay"=0.01, ""}
+    )
     es.optimize(cost_func)
-
+    print(es.result)
     return es.result.xbest, n_m.activations_hist, cost_history
 
 
@@ -339,7 +341,7 @@ if __name__ == "__main__":
     n_manage = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
     first_ws_bs = n_manage.get_flattened_ws_bs()
     result, activations_hist, cost_his = optimise_with_scipy(
-        sin_function, n_manage, (-5, 5), 500, 100
+        sin_function, n_manage, (-3, 3), 50, 10000
     )
 
     print(result)
