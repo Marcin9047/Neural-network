@@ -5,9 +5,6 @@ from scipy.optimize import minimize
 
 
 class Layer_function:
-    def __init__(self):
-        pass
-
     def get_output(self, weights: array, input_activation: array, bias: array):
         # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}")
         value = np.dot(input_activation, weights)
@@ -19,6 +16,18 @@ class Layer_function:
 
     def get_deriv_output_to_w_input_a(self, stuff):
         pass
+
+
+class SigmoidFunction(Layer_function):
+    def get_output(self, weights: array, input_activation: array, bias: array):
+        # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}")
+        value = np.dot(input_activation, weights)
+        # print(f"value:\n{value}")
+        value += bias
+        # print(f"value + bias:\n{value}")
+        # @TODO SHIT
+        val_exp = 1 / (1 + np.exp(-value))
+        return np.array(val_exp)
 
 
 class LayerBase:
@@ -101,7 +110,7 @@ class Cost_function:
         return (a_output - y_pref) ** 2
 
     def get_float_cost(self, y_pref, a_output):
-        return np.linalg.norm(self.get_cost(y_pref, a_output))
+        return np.sum(self.get_cost(y_pref, a_output))
 
     def get_deriv_cost_to_a_output(self, y_pref, a_output):
         return 2 * (a_output - y_pref)
@@ -271,16 +280,20 @@ def testing_func(x):
     return val
 
 
-def optimise_with_scipy(iter_limit, n_m: BaseNeuralNetwork, limits, nr_per_iter: int):
+def optimise_with_scipy(
+    emulate_func, n_m: BaseNeuralNetwork, limits, nr_per_iter: int, max_iter=100000
+):
     cf = Cost_function()
     amplitude = limits[1] - limits[0]
     cost_history = []
+    import cma
 
     def cost_func(params: array):
         n_m.update_with_flattened_w_and_b(params)
-        random_list = np.random.rand(nr_per_iter)
-        x_list = (random_list * amplitude) + limits[0]
-        y_list = testing_func(x_list)
+        # random_list = np.random.rand(nr_per_iter)
+        # x_list = (random_list * amplitude) + limits[0]
+        x_list = np.linspace(limits[0], limits[1], nr_per_iter)
+        y_list = emulate_func(x_list)
         y_pred = []
         cost = 0
         for x in x_list:
@@ -293,30 +306,62 @@ def optimise_with_scipy(iter_limit, n_m: BaseNeuralNetwork, limits, nr_per_iter:
     # cost_func = cf.get_cost
     params_init = n_m.get_flattened_ws_bs()
     # print(params_init)
-    mini_result = minimize(
-        cost_func,
-        params_init,
-        method="L-BFGS-B",
-        options={"maxiter": iter_limit},
-    )
+    # mini_result = minimize(
+    #     cost_func,
+    #     params_init,
+    # )
+    es = cma.CMAEvolutionStrategy(params_init, 0.5, {"maxiter": max_iter})
+    es.optimize(cost_func)
 
-    return mini_result, n_m.activations_hist, cost_history
+    return es.result.xbest, n_m.activations_hist, cost_history
+
+
+def get_values_for_X(X, nm: BaseNeuralNetwork):
+    Y = []
+    for x in X:
+        Y.append(float(nm.calculate_output(x)))
+    return Y
+
+
+def sin_function(x):
+    return np.sin(x)
 
 
 if __name__ == "__main__":
-    f = Layer_function()
-    l1 = LayerBase(2, 1, f)
-    l2 = LayerBase(3, 2, f)
-    l_out = LayerBase(1, 3, f)
+    f = SigmoidFunction()
+    l1 = LayerBase(5, 1, f)
+    l2 = LayerBase(10, 5, f)
+    l3 = LayerBase(10, 10, f)
+    l4 = LayerBase(5, 10, f)
+    # l5 = LayerBase(5, 5, f)
+    l_out = LayerBase(1, 5, f)
 
-    n_manage = BaseNeuralNetwork([l1, l2, l_out])
-    mini_result, activations_hist, cost_his = optimise_with_scipy(
-        100, n_manage, (-1, 1), 10
+    n_manage = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
+    first_ws_bs = n_manage.get_flattened_ws_bs()
+    result, activations_hist, cost_his = optimise_with_scipy(
+        sin_function, n_manage, (-5, 5), 500, 100
     )
-    print(mini_result)
+
+    print(result)
+    # print(mini_result["x"])
+    # print(activations_hist)
+    best_ws_bs = result
+
     from matplotlib import pyplot as plt
 
-    plt.plot(cost_his)
+    # plt.plot(cost_his)
+    # plt.show()
+    n_manage.update_with_flattened_w_and_b(best_ws_bs)
+    x_plot = np.linspace(-7, 7, 1000)
+    y_perf = sin_function(x_plot)
+    y_best = get_values_for_X(x_plot, n_manage)
+    n_manage.update_with_flattened_w_and_b(first_ws_bs)
+    y_first = get_values_for_X(x_plot, n_manage)
+    plt.plot(x_plot, y_perf, label="function")
+    # plt.plot(x_plot, y_first, label="random weights")
+    plt.plot(x_plot, y_best, label="weigths trained")
+    plt.legend()
+    # plt.semilogy()
     plt.show()
     # w = l2.b
     # w_flat = n_manage._convert_w_to_list(w)
