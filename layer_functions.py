@@ -3,7 +3,7 @@ from numpy import array
 from typing import List, Tuple, Callable
 
 
-class LayerFunction:
+class BaseLayerFunction:
     def get_output(self, weights: array, input_activation: array, bias: array):
         # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}")
         value = np.dot(input_activation, weights)
@@ -22,7 +22,7 @@ class LayerFunction:
     #     return input_activation_reconstructed
 
 
-class SigmoidFunction(LayerFunction):
+class SigmoidFunction(BaseLayerFunction):
     def get_output(self, weights: array, input_activation: array, bias: array):
         value = np.dot(input_activation, weights)
         value += bias

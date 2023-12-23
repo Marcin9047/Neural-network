@@ -1,7 +1,7 @@
 import numpy as np
 from numpy import array
 from typing import List, Tuple, Callable
-from layer_functions import LayerFunction
+from layer_functions import BaseLayerFunction
 
 
 class LayerBase:
@@ -9,20 +9,14 @@ class LayerBase:
         self,
         neuron_size,
         activation_size,
-        wraping_function: LayerFunction,
-        log_changes=False,
+        wraping_function: BaseLayerFunction,
     ):
         self.w_size = (activation_size, neuron_size)
         self.neuron_size = neuron_size
         self.activation_size = activation_size
         self.activation_function = wraping_function
         self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
-        self.log_changes = log_changes
-        if self.log_changes:
-            self.w_history = [self.w]
         self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
-        if self.log_changes:
-            self.b_history = [self.b]
         self.b_size = self.neuron_size
         self.last_activation = None
         self.last_output = None
@@ -69,8 +63,6 @@ class LayerBase:
             raise ValueError(
                 "there are different number of bias_n than in the old bias"
             )
-        if self.log_changes:
-            self.b_history.append(new_flat_bias)
         self.b = new_flat_bias
 
     def get_flat_weights_vector(self):
