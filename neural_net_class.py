@@ -25,7 +25,6 @@ class BaseNeuralNetwork:
         self.input_size = list_of_layers[0].activation_size
         self.activations_hist = []
         self.flat_w_size = len(self.get_flattened_weights())
-        self.flat_b_size = len(self.get_flattened_bias())
 
     def calculate_output(self, x: array):
         # Przepepuszcza aktywacje przez wszystkie warstwy i zwraca aktywację ostatniej warstwy
@@ -52,7 +51,7 @@ class BaseNeuralNetwork:
         # zwraca vector wszystkich płaskich wag dla wszystkich warstw
         full_weights = []
         for layer in self.layers:
-            full_weights.append(self._convert_w_to_list(layer.w))
+            full_weights.append(layer.get_flat_weights_vector())
         return np.concatenate(full_weights)
 
     def get_flattened_bias(self):
