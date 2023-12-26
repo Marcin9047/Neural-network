@@ -49,22 +49,10 @@ class LayerBase:
     def update_w(self, new_w: array):
         self.w = new_w
 
-    def update_w_with_flat(self, new_flat_w: array):
-        # Updateuje wagi na podstawie płaskiego wektora wag
-        if len(new_flat_w) != self.full_size_of_w:
-            raise ValueError(
-                "there are different number of weights than in the old wector"
-            )
-        new_w = new_flat_w.reshape(self.w_size)
-        self.update_w(new_w)
-
-    def update_b_with_flat(self, new_flat_bias: array):
+    def update_b(self, new_bias: array):
         #  Updateuje bias na podstawie płaskiego wektora biasów
-        if len(self.b) != len(new_flat_bias):
+        if len(self.b) != len(new_bias):
             raise ValueError(
                 "there are different number of bias_n than in the old bias"
             )
-        self.b = new_flat_bias
-
-    def get_flat_weights_vector(self):
-        return np.ravel(self.w)
+        self.b = new_bias

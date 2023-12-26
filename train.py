@@ -21,7 +21,7 @@ def optimise_with_evolutions(
     cf = CostFunction()
 
     def cost_func(params: array):
-        update_with_flattened_w_and_b(n_m.layers, params)
+        n_m.update_with_flattened_w_and_b(params)
         x_list = np.linspace(limits[0], limits[1], nr_per_iter)
         y_list = emulate_func(x_list)
         y_pred = []
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                 "samples": nr_of_samples,
             }
             nm = Neural_net([l1, l2, l3, l4, l_out], 1)
-            update_with_flattened_w_and_b(nm.layers, first_ws_bs)
+            nm.update_with_flattened_w_and_b(first_ws_bs)
 
             resultx, result = optimise_with_evolutions(
                 function_to_optimise,
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             print(f"sigma:{sigma}, pop:{population_size} = result {result.fbest}")
             test_note["result"] = result.fbest
             test_note["flatwsbs"] = list(resultx)
-            update_with_flattened_w_and_b(n_manage.layers, resultx)
+            n_manage.update_with_flattened_w_and_b(resultx)
             y_best_neural_network = get_values_for_X(x_plot, n_manage)
             label = "weights sigma=" + str(sigma) + "pop=" + str(population_size)
             plt.plot(x_plot, y_best_neural_network, label=label)
