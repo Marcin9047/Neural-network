@@ -38,7 +38,7 @@ class Neural_net:
         activations = []
         activations.append(a)
         for ix, layer in enumerate(self.layers):
-            a = layer.output(a)
+            a = layer.compute_output(a)
             activations.append(a)
         self.activations_hist.append(activations)
         return a

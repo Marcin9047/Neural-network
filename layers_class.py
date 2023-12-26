@@ -39,7 +39,7 @@ class LayerBase:
                 new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
         return new_deriv
 
-    def output(self, a0: array):
+    def compute_output(self, a0: array):
         # oblicza output warstwy na podstawie wejścia z outputu poprzedniej warstwy
         self.last_activation = a0
         value = self.activation_function.get_output(self.w, a0, self.b)
