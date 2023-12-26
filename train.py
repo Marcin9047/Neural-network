@@ -6,6 +6,7 @@ from neural_net_class import Neural_net, CostFunction
 from layer_functions import SigmoidFunction, BaseLayerFunction
 from matplotlib import pyplot as plt
 import cma
+from type_converters import *
 
 
 def optimise_with_evolutions(
@@ -20,7 +21,7 @@ def optimise_with_evolutions(
     cf = CostFunction()
 
     def cost_func(params: array):
-        n_m.update_with_flattened_w_and_b(params)
+        update_with_flattened_w_and_b(n_m.layers, params)
         x_list = np.linspace(limits[0], limits[1], nr_per_iter)
         y_list = emulate_func(x_list)
         y_pred = []
@@ -30,7 +31,7 @@ def optimise_with_evolutions(
         cost += cf.get_float_cost(y_list, np.array(y_pred))
         return cost / nr_per_iter
 
-    params_init = n_m.get_flattened_ws_bs()
+    params_init = get_flattened_ws_bs(n_m.layers)
 
     es = cma.CMAEvolutionStrategy(
         params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     # l5 = LayerBase(5, 5, f)
     l_out = LayerBase(1, fl)
     n_manage = Neural_net([l1, l2, l3, l4, l_out], 1)
-    first_ws_bs = n_manage.get_flattened_ws_bs()
+    first_ws_bs = get_flattened_ws_bs(n_manage.layers)
     # n_manage.up
     function_to_optimise = linear_function
     size = (-5, 5)
@@ -95,7 +96,7 @@ if __name__ == "__main__":
                 "samples": nr_of_samples,
             }
             nm = Neural_net([l1, l2, l3, l4, l_out], 1)
-            nm.update_with_flattened_w_and_b(first_ws_bs)
+            update_with_flattened_w_and_b(nm.layers, first_ws_bs)
 
             resultx, result = optimise_with_evolutions(
                 function_to_optimise,
@@ -110,7 +111,7 @@ if __name__ == "__main__":
             print(f"sigma:{sigma}, pop:{population_size} = result {result.fbest}")
             test_note["result"] = result.fbest
             test_note["flatwsbs"] = list(resultx)
-            n_manage.update_with_flattened_w_and_b(resultx)
+            update_with_flattened_w_and_b(n_manage.layers, resultx)
             y_best_neural_network = get_values_for_X(x_plot, n_manage)
             label = "weights sigma=" + str(sigma) + "pop=" + str(population_size)
             plt.plot(x_plot, y_best_neural_network, label=label)
