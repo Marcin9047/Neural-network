@@ -18,12 +18,18 @@ class CostFunction:
         return 2 * (a_output - y_pref)
 
 
-class BaseNeuralNetwork:
-    def __init__(self, list_of_layers: List[LayerBase]):
+class Neural_net:
+    def __init__(self, list_of_layers: List[LayerBase], input_size):
         self.layers = list_of_layers
         self.layer_number = len(list_of_layers)
-        self.input_size = list_of_layers[0].activation_size
         self.activations_hist = []
+
+        self.layers[0].set_previous_size(input_size)
+
+        for ind, layer in enumerate(self.layers, 1):
+            layer.set_previous_size(self.layers[ind - 1].neuron_size)
+
+        self.input_size = list_of_layers[0].previous_layer_size
         self.flat_w_size = len(self.get_flattened_weights())
 
     def calculate_output(self, x: array):
@@ -32,7 +38,7 @@ class BaseNeuralNetwork:
         activations = []
         activations.append(a)
         for ix, layer in enumerate(self.layers):
-            a = layer.compute_activation(a)
+            a = layer.output(a)
             activations.append(a)
         self.activations_hist.append(activations)
         return a

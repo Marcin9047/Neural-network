@@ -2,7 +2,7 @@ from layers_class import LayerBase
 from numpy import array
 import numpy as np
 from typing import Callable, Tuple, List
-from neural_net_class import BaseNeuralNetwork, CostFunction
+from neural_net_class import Neural_net, CostFunction
 from layer_functions import SigmoidFunction, BaseLayerFunction
 from matplotlib import pyplot as plt
 import cma
@@ -10,7 +10,7 @@ import cma
 
 def optimise_with_evolutions(
     emulate_func,
-    n_m: BaseNeuralNetwork,
+    n_m: Neural_net,
     limits,
     nr_per_iter: int,
     max_iter=100000,
@@ -40,7 +40,7 @@ def optimise_with_evolutions(
     return es.result.xbest, es.result
 
 
-def get_values_for_X(X, nm: BaseNeuralNetwork):
+def get_values_for_X(X, nm: Neural_net):
     Y = []
     for x in X:
         Y.append(float(nm.calculate_output(x)))
@@ -65,13 +65,13 @@ if __name__ == "__main__":
     i = 3
     fs = SigmoidFunction()
     fl = BaseLayerFunction()
-    l1 = LayerBase(5, 1, fl)
-    l2 = LayerBase(10, 5, fs)
-    l3 = LayerBase(10, 10, fs)
-    l4 = LayerBase(5, 10, fl)
+    l1 = LayerBase(5, fl)
+    l2 = LayerBase(10, fs)
+    l3 = LayerBase(10, fs)
+    l4 = LayerBase(5, fl)
     # l5 = LayerBase(5, 5, f)
-    l_out = LayerBase(1, 5, fl)
-    n_manage = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
+    l_out = LayerBase(1, fl)
+    n_manage = Neural_net([l1, l2, l3, l4, l_out], 1)
     first_ws_bs = n_manage.get_flattened_ws_bs()
     # n_manage.up
     function_to_optimise = linear_function
@@ -94,7 +94,7 @@ if __name__ == "__main__":
                 "iter": max_iterations,
                 "samples": nr_of_samples,
             }
-            nm = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
+            nm = Neural_net([l1, l2, l3, l4, l_out], 1)
             nm.update_with_flattened_w_and_b(first_ws_bs)
 
             resultx, result = optimise_with_evolutions(

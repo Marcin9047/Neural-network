@@ -8,19 +8,20 @@ class LayerBase:
     def __init__(
         self,
         neuron_size,
-        activation_size,
         wraping_function: BaseLayerFunction,
     ):
-        self.w_size = (activation_size, neuron_size)
         self.neuron_size = neuron_size
-        self.activation_size = activation_size
         self.activation_function = wraping_function
-        self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
         self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
         self.b_size = self.neuron_size
         self.last_activation = None
         self.last_output = None
-        self.full_size_of_w = self.neuron_size * self.activation_size
+
+    def set_previous_size(self, size):
+        self.previous_layer_size = size
+        self.w_size = (self.previous_layer_size, self.neuron_size)
+        self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
+        self.full_size_of_w = self.neuron_size * self.previous_layer_size
 
     def compute_deriv_w(self, arguments_todo) -> array:
         pass
@@ -34,11 +35,11 @@ class LayerBase:
 
         new_deriv = np.zeros(self.w_size)
         for i_n in range(self.neuron_size):
-            for i_a in range(self.activation_size):
+            for i_a in range(self.previous_layer_size):
                 new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
         return new_deriv
 
-    def compute_activation(self, a0: array):
+    def output(self, a0: array):
         # oblicza output warstwy na podstawie wejścia z outputu poprzedniej warstwy
         self.last_activation = a0
         value = self.activation_function.get_output(self.w, a0, self.b)
