@@ -26,8 +26,8 @@ class Neural_net:
 
         self.layers[0].set_previous_size(input_size)
 
-        for ind, layer in enumerate(self.layers, 1):
-            layer.set_previous_size(self.layers[ind - 1].neuron_size)
+        for ind in range(1, len(self.layers)):
+            self.layers[ind].set_previous_size(self.layers[ind - 1].neuron_size)
 
         self.input_size = list_of_layers[0].previous_layer_size
         self.flat_w_size = len(self.get_flattened_weights())
