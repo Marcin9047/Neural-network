@@ -1,54 +1,69 @@
 import numpy as np
 from numpy import array
 from typing import List, Tuple, Callable
-
-
-class Layer_function:
-    def __init__(self):
-        pass
-
-    def get_output(self, weights: array, input_activation: array, bias: array):
-        value = np.dot(weights.T, input_activation) + bias
-        return value
-
-    def get_deriv_output_to_input_a(self, stuff):
-        pass
+from layer_functions import BaseLayerFunction
 
 
 class LayerBase:
-    def __init__(self, neuron_size, activation_size, wraping_function: Layer_function):
+    def __init__(
+        self,
+        neuron_size,
+        activation_size,
+        wraping_function: BaseLayerFunction,
+    ):
         self.w_size = (activation_size, neuron_size)
         self.neuron_size = neuron_size
         self.activation_size = activation_size
         self.activation_function = wraping_function
         self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
         self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
+        self.b_size = self.neuron_size
         self.last_activation = None
+        self.last_output = None
+        self.full_size_of_w = self.neuron_size * self.activation_size
 
     def compute_deriv_w(self, arguments_todo) -> array:
-        return None
-
-    def compute_activation(self, a0: array):
-        value = self.activation_function.get_output(self.w, a0, self.b)
-        self.last_activation = value
-        return value
-
-
-class Cost_function:
-    def __init__(self):
         pass
 
-    def get_cost(self, y_pref, a_output):
-        return (a_output - y_pref) ** 2
+    def compute_deriv_w_after_s(self, next_layer_deriv_w_after_s: array) -> array:
+        # @TODO Na razie oblicza wpływ poszczególnych wag na koszt w ostatniej warstwie,
+        # nie uwzględnia funkcji obliczającej tylko wstępnie oblicza ten wpływ.
+        wector_of_activ = np.zeros(self.neuron_size)
+        for i, activation_deriv_layer_per_n in enumerate(next_layer_deriv_w_after_s):
+            wector_of_activ[i] = np.sum(activation_deriv_layer_per_n)
 
-    def get_deriv_cost_to_a_output(self, y_pref, a_output):
-        return 2(a_output - y_pref)
+        new_deriv = np.zeros(self.w_size)
+        for i_n in range(self.neuron_size):
+            for i_a in range(self.activation_size):
+                new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
+        return new_deriv
 
+    def compute_activation(self, a0: array):
+        # oblicza output warstwy na podstawie wejścia z outputu poprzedniej warstwy
+        self.last_activation = a0
+        value = self.activation_function.get_output(self.w, a0, self.b)
+        self.last_output = value
+        return value
 
-class Gradient_descent:
-    def __init__(self, Bw, Bb):
-        self.Bw = Bw
-        self.Bb = Bb
+    def update_w(self, new_w: array):
+        self.w = new_w
 
-    def compute_new_weights(self, weights: List[array], weigths_deriv: List[array]):
-        new_weights = []
+    def update_w_with_flat(self, new_flat_w: array):
+        # Updateuje wagi na podstawie płaskiego wektora wag
+        if len(new_flat_w) != self.full_size_of_w:
+            raise ValueError(
+                "there are different number of weights than in the old wector"
+            )
+        new_w = new_flat_w.reshape(self.w_size)
+        self.update_w(new_w)
+
+    def update_b_with_flat(self, new_flat_bias: array):
+        #  Updateuje bias na podstawie płaskiego wektora biasów
+        if len(self.b) != len(new_flat_bias):
+            raise ValueError(
+                "there are different number of bias_n than in the old bias"
+            )
+        self.b = new_flat_bias
+
+    def get_flat_weights_vector(self):
+        return np.ravel(self.w)
