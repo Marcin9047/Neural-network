@@ -10,7 +10,8 @@ class CostFunction:
         pass
 
     def get_cost(self, y_pref, a_output):
-        return (a_output - y_pref) ** 2
+        values = y_pref - a_output
+        return [x**2 for x in values]
 
     def get_float_cost(self, y_pref, a_output):
         return np.sum(self.get_cost(y_pref, a_output))

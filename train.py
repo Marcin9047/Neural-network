@@ -28,11 +28,11 @@ class Multiple_evaluation:
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
         y_pred = []
-        cost = 0
         for x in x_list:
-            y_pred.append(self.net.calculate_output(x))
-        cost += cf.get_float_cost(y_list, np.array(y_pred))
-        return cost / self.nr_per_iter
+            y_pred.append(self.net.calculate_output(x)[0][0])
+        cost = cf.get_cost(y_list, y_pred)
+        val = np.sum(cost)
+        return val
 
     def optimise_with_evolutions(
         self,
@@ -125,9 +125,9 @@ if __name__ == "__main__":
     l4 = LayerBase(5, fl)
     l_out = LayerBase(1, fl)
 
-    nr_of_samples = 10
-    imax = 200
-    population_size = 25
+    nr_of_samples = 30
+    imax = 300
+    population_size = 50
     sigma = 0.3
     char_size = (-5, 5)
 
