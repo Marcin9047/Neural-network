@@ -2,49 +2,58 @@ from layers_class import LayerBase
 from numpy import array
 import numpy as np
 from typing import Callable, Tuple, List
-from neural_net_class import BaseNeuralNetwork, CostFunction
+from neural_net_class import Neural_net, CostFunction
 from layer_functions import SigmoidFunction, BaseLayerFunction
 from matplotlib import pyplot as plt
 import cma
+from type_converters import *
 
 
-def optimise_with_evolutions(
-    emulate_func,
-    n_m: BaseNeuralNetwork,
-    limits,
-    nr_per_iter: int,
-    max_iter=100000,
-    popsize=1000,
-    sigma0=0.1,
-):
-    cf = CostFunction()
+class Multiple_evaluation:
+    def __init__(
+        self,
+        emulate_func,
+        net: Neural_net,
+        limits,
+        nr_per_iter: int,
+    ):
+        self.net = net
+        self.function = emulate_func
+        self.limits = limits
+        self.nr_per_iter = nr_per_iter
 
-    def cost_func(params: array):
-        n_m.update_with_flattened_w_and_b(params)
-        x_list = np.linspace(limits[0], limits[1], nr_per_iter)
-        y_list = emulate_func(x_list)
+    def cost_func(self, params: array):
+        cf = CostFunction()
+        self.net.update_with_flattened_w_and_b(params)
+        x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
+        y_list = self.function(x_list)
         y_pred = []
-        cost = 0
         for x in x_list:
-            y_pred.append(n_m.calculate_output(x))
-        cost += cf.get_float_cost(y_list, np.array(y_pred))
-        return cost / nr_per_iter
+            y_pred.append(self.net.calculate_output(x)[0][0])
+        cost = cf.get_cost(y_list, y_pred)
+        val = np.sum(cost)
+        return val
 
-    params_init = n_m.get_flattened_ws_bs()
+    def optimise_with_evolutions(
+        self,
+        max_iter=100000,
+        popsize=1000,
+        sigma0=0.1,
+    ):
+        params_init = get_flattened_ws_bs(self.net.layers)
 
-    es = cma.CMAEvolutionStrategy(
-        params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
-    )
-    es.optimize(cost_func)
-    # print(es.result)
-    return es.result.xbest, es.result
+        es = cma.CMAEvolutionStrategy(
+            params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
+        )
+        es.optimize(self.cost_func)
+        # print(es.result)
+        return es.result.xbest, es.result
 
-
-def get_values_for_X(X, nm: BaseNeuralNetwork):
-    Y = []
-    for x in X:
-        Y.append(float(nm.calculate_output(x)))
-    return Y
+    def get_values_for_X(self, X):
+        Y = []
+        for x in X:
+            Y.append(float(self.net.calculate_output(x)))
+        return Y
 
 
 def extra_sin_function(x):
@@ -61,82 +70,70 @@ def task_function(x):
     return val
 
 
+def multiple_test(
+    neural_net, function, char_size, nr_of_samples, max_iterations, population, sigma
+):
+    # first_ws_bs = get_flattened_ws_bs(neural_net.layers)
+
+    x_values = np.linspace(char_size[0], char_size[1], 1000)
+    y_values = function(x_values)
+    plt.plot(x_values, y_values, label="function")
+
+    # neural_net.update_with_flattened_w_and_b(first_ws_bs)
+
+    results_cls = Multiple_evaluation(
+        function,
+        neural_net,
+        char_size,
+        nr_of_samples,
+    )
+
+    resultx, result = results_cls.optimise_with_evolutions(
+        max_iterations,
+        population,
+        sigma,
+    )
+    x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
+    print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
+    neural_net.update_with_flattened_w_and_b(resultx)
+    y_best_neural_network = results_cls.get_values_for_X(x_values)
+    label = "sigma=" + str(sigma) + " pop=" + str(population)
+    plt.plot(x_values, y_best_neural_network, "r", label=label)
+    plt.plot(x_values, y_best_neural_network, "r+")
+
+    plt.legend()
+    title = (
+        "Neural network function aproximation (samples:"
+        + str(nr_of_samples)
+        + " popsize:"
+        + str(population)
+        + " iterations:"
+        + str(max_iterations)
+        + ")"
+    )
+    plt.title(title)
+    plt.show()
+
+
 if __name__ == "__main__":
-    i = 3
     fs = SigmoidFunction()
     fl = BaseLayerFunction()
-    l1 = LayerBase(5, 1, fl)
-    l2 = LayerBase(10, 5, fs)
-    l3 = LayerBase(10, 10, fs)
-    l4 = LayerBase(5, 10, fl)
-    # l5 = LayerBase(5, 5, f)
-    l_out = LayerBase(1, 5, fl)
-    n_manage = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
-    first_ws_bs = n_manage.get_flattened_ws_bs()
-    # n_manage.up
-    function_to_optimise = linear_function
-    size = (-5, 5)
-    x_plot = np.linspace(size[0], size[1], 1000)
-    y_function = function_to_optimise(x_plot)
 
-    nr_of_samples = 100
-    max_iterations = 250
-    # population_size = 255
-    # sigma = 0.5
-    for pop_size in [10, 25, 50, 100, 200, 255]:
-        plt.plot(x_plot, y_function, label="function")
-        for sigma_from_list in [0.01, 0.1, 0.5, 0.9, 1.1, 1.5]:
-            sigma = sigma_from_list
-            population_size = pop_size
-            test_note = {
-                "sigma": sigma,
-                "pop_size": population_size,
-                "iter": max_iterations,
-                "samples": nr_of_samples,
-            }
-            nm = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
-            nm.update_with_flattened_w_and_b(first_ws_bs)
+    l1 = LayerBase(5, fl)
+    l2 = LayerBase(10, fs)
+    l3 = LayerBase(10, fs)
+    l4 = LayerBase(5, fl)
+    l_out = LayerBase(1, fl)
 
-            resultx, result = optimise_with_evolutions(
-                function_to_optimise,
-                nm,
-                size,
-                nr_of_samples,
-                max_iterations,
-                population_size,
-                sigma,
-            )
-            # print(result)
-            print(f"sigma:{sigma}, pop:{population_size} = result {result.fbest}")
-            test_note["result"] = result.fbest
-            test_note["flatwsbs"] = list(resultx)
-            n_manage.update_with_flattened_w_and_b(resultx)
-            y_best_neural_network = get_values_for_X(x_plot, n_manage)
-            label = "weights sigma=" + str(sigma) + "pop=" + str(population_size)
-            plt.plot(x_plot, y_best_neural_network, label=label)
+    nr_of_samples = 30
+    imax = 300
+    population_size = 50
+    sigma = 0.3
+    char_size = (-5, 5)
 
-        plt.legend()
-        # plt.show()
-        title = (
-            "Neural network function aproximation (samples:"
-            + str(nr_of_samples)
-            + " popsize:"
-            + str(population_size)
-            + " iterations:"
-            + str(max_iterations)
-            + ")"
-        )
-        plt.title(title)
-        path = (
-            "figures/"
-            + str(i)
-            + "/sam"
-            + str(nr_of_samples)
-            + "_pop"
-            + str(population_size)
-            + "_iter"
-            + str(max_iterations)
-            + ".png"
-        )
-        plt.savefig(path)
-        plt.close()
+    opt_function = linear_function
+    n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
+
+    multiple_test(
+        n_test, opt_function, char_size, nr_of_samples, imax, population_size, sigma
+    )
