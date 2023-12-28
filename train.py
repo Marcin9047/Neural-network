@@ -26,8 +26,9 @@ def optimise_with_evolutions(
         y_pred = []
         cost = 0
         for x in x_list:
-            y_pred.append(n_m.calculate_output(x))
-        cost += cf.get_float_cost(y_list, np.array(y_pred))
+            y_rel = emulate_func(x)
+            y_nm = n_m.calculate_output(x)
+            cost += float(cf.get_cost(y_rel, y_nm))
         return cost / nr_per_iter
 
     params_init = n_m.get_flattened_ws_bs()
@@ -52,7 +53,7 @@ def extra_sin_function(x):
 
 
 def linear_function(x):
-    return x * 0.4
+    return (x * 0.4) + 2
 
 
 def task_function(x):
@@ -72,7 +73,7 @@ if __name__ == "__main__":
     # l5 = LayerBase(5, 5, f)
     l_out = LayerBase(1, 5, fl)
     n_manage = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
-    first_ws_bs = n_manage.get_flattened_ws_bs()
+    continual_wsbs = n_manage.get_flattened_ws_bs()
     # n_manage.up
     function_to_optimise = linear_function
     size = (-5, 5)
@@ -95,7 +96,7 @@ if __name__ == "__main__":
                 "samples": nr_of_samples,
             }
             nm = BaseNeuralNetwork([l1, l2, l3, l4, l_out])
-            nm.update_with_flattened_w_and_b(first_ws_bs)
+            nm.update_with_flattened_w_and_b(continual_wsbs)
 
             resultx, result = optimise_with_evolutions(
                 function_to_optimise,
@@ -107,6 +108,7 @@ if __name__ == "__main__":
                 sigma,
             )
             # print(result)
+            continual_wsbs = resultx
             print(f"sigma:{sigma}, pop:{population_size} = result {result.fbest}")
             test_note["result"] = result.fbest
             test_note["flatwsbs"] = list(resultx)
