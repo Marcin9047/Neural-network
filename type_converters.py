@@ -22,6 +22,20 @@ def get_flattened_weights(layers):
     return np.concatenate(full_weights)
 
 
+def get_weights(layers):
+    weights = []
+    for layer in layers:
+        weights.append(layer.w)
+    return weights
+
+
+def get_biases(layers):
+    biases = []
+    for layer in layers:
+        biases.append(layer.b)
+    return biases
+
+
 def get_flattened_bias(layers):
     # zwraca vector wszystkich płaskich biasów dla wszystkich warstw
     full_bias = []

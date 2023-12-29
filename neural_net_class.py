@@ -44,6 +44,29 @@ class Neural_net:
         self.activations_hist.append(activations)
         return a
 
+    def calculate_output_for_many_values(self, X):
+        Y = []
+        for x in X:
+            Y.append(self.calculate_output(x))
+        return Y
+
+    def backpropagate_w(self, cost_deriv):
+        dws = [None for i in self.layers]
+        dc = cost_deriv
+        for i in range(self.layer_number):
+            j = (self.layer_number - i) - 1
+            dc = self.layers[j].compute_deriv_w_after_s(dc)
+            dws[j] = dc
+        return dws
+
+    def update_with_weights(self, weights: List[array]):
+        for i in range(self.layer_number):
+            self.layers[i].update_w(weights[i])
+
+    def update_with_biases(self, biases: List[array]):
+        for i in range(self.layer_number):
+            self.layers[i].update_b(biases[i])
+
     def update_with_flattened_bias(self, flattened_bias: array):
         # zmienia biasy warstw na te podane w wektorze biasów wszystkich warstw
         flat_sizes = []
