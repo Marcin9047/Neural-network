@@ -4,17 +4,13 @@ from typing import List, Tuple, Callable
 
 
 class BaseLayerFunction:
-    def get_output(self, weights: array, input_activation: array, bias: array):
-        # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}")
-        value = np.dot(input_activation, weights)
-        # print(f"value:\n{value}")
-        value += bias
-        # print(f"value + bias:\n{value}")
-        # @TODO SHIT
-        return np.array(value)
+    def get_output(self, value: array):
+        # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}
 
-    def get_deriv_output_to_w_input_a(self, stuff):
-        pass
+        return value
+
+    def get_function_derivative(self, value: array):
+        return value
 
     # def reverse_output(self, output_activation: array, weights: array, bias: array):
     #     output_activation -= bias
@@ -23,8 +19,14 @@ class BaseLayerFunction:
 
 
 class SigmoidFunction(BaseLayerFunction):
-    def get_output(self, weights: array, input_activation: array, bias: array):
-        value = np.dot(input_activation, weights)
-        value += bias
+    def get_output(self, value: array):
         val_exp = 1 / (1 + np.exp(-value))
         return np.array(val_exp)
+
+    def get_function_derivative(self, value: array):
+        val_exp = 1 / (1 + np.exp(-value))
+        return np.array(val_exp * (1 - val_exp))
+
+    # def get_derivative_after_w(self, weights: array, bias: array, dC: array):
+    #     value =
+    #     return dC

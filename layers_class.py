@@ -12,7 +12,9 @@ class LayerBase:
     ):
         self.neuron_size = neuron_size
         self.activation_function = wraping_function
-        self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
+        # self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
+        self.b = np.zeros(shape=self.neuron_size)
+
         self.b_size = self.neuron_size
         self.last_activation = None
         self.last_output = None
@@ -34,17 +36,26 @@ class LayerBase:
             wector_of_activ[i] = np.sum(activation_deriv_layer_per_n)
 
         new_deriv = np.zeros(self.w_size)
+
         for i_n in range(self.neuron_size):
             for i_a in range(self.previous_layer_size):
                 new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
-        return new_deriv
+
+        # normalize
+        fullstuff = np.sum(np.abs(self.w))
+        new_deriv = new_deriv / fullstuff
+        der = self.activation_function.get_function_derivative(new_deriv)
+
+        return der
 
     def compute_output(self, a0: array):
         # oblicza output warstwy na podstawie wejścia z outputu poprzedniej warstwy
         self.last_activation = a0
-        value = self.activation_function.get_output(self.w, a0, self.b)
-        self.last_output = value
-        return value
+        value = np.dot(a0, self.w)
+        value += self.b
+        output = self.activation_function.get_output(value)
+        self.last_output = output
+        return output
 
     def update_w(self, new_w: array):
         self.w = new_w
