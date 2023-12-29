@@ -1,3 +1,6 @@
 outcmaes/
 testing.ipynb
 network_trained.txt
+figures/
+copy_of_code/
+__pycache__/
