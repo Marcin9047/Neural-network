@@ -43,6 +43,8 @@ class LayerBase:
 
         # normalize
         fullstuff = np.sum(np.abs(self.w))
+        # fullstuff = np.sum((self.w))
+
         new_deriv = new_deriv / fullstuff
         der = self.activation_function.get_function_derivative(new_deriv)
 

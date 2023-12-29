@@ -45,17 +45,17 @@ if __name__ == "__main__":
     n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
     import json
 
-    with open("n_weights_5_10_10_5_1.json", "r") as f:
-        n_stuff = json.load(f)
-    # with open("n_weights_5_10_10_5_1.json", "w") as f:
-    #     json.dump(list(get_flattened_weights(n_test.layers)), f)
-    n_test.update_with_flattened_weights(n_stuff)
+    # with open("n_weights_5_10_10_5_1.json", "r") as f:
+    #     n_stuff = json.load(f)
+    # # with open("n_weights_5_10_10_5_1.json", "w") as f:
+    # #     json.dump(list(get_flattened_weights(n_test.layers)), f)
+    # n_test.update_with_flattened_weights(n_stuff)
     print(y)
     print(n_test.calculate_output_for_many_values(x))
     cf = CostFunction()
-    B = 0.05
+    B = 0.01
     learn_rate = 0.99
-    iter_nr = 1000
+    iter_nr = 24
     cost_hist = []
     value_hist = []
     B_descenting = B
@@ -69,11 +69,14 @@ if __name__ == "__main__":
             dC = cf.get_deriv_cost_to_a_output(y[t_s], nout)
             cost_sum += cf.get_float_cost(y[t_s], nout)
             dweights_list.append(n_test.backpropagate_w(dC))
-        cost_hist.append(float(cost_sum))
 
+        cost_hist.append(float(cost_sum))
+        # print(dweights_list)
+        we_comp = compose_many_gradients(dweights_list)
+        print(we_comp)
         new_weights = descent_weights(
             get_weights(n_test.layers),
-            compose_many_gradients(dweights_list),
+            we_comp,
             B_descenting,
         )
 
@@ -87,12 +90,12 @@ if __name__ == "__main__":
     plt.plot(cost_hist)
     plt.semilogy()
     plt.show()
-    # plt.plot(x, y, label="function")
-    # plt.plot(
-    #     x,
-    #     [float(i) for i in n_test.calculate_output_for_many_values(x)],
-    #     label="neural net",
-    # )
+    plt.plot(x, y, label="function")
+    plt.plot(
+        x,
+        [float(i) for i in n_test.calculate_output_for_many_values(x)],
+        label="neural net",
+    )
 
-    # plt.legend()
-    # plt.show()
+    plt.legend()
+    plt.show()
