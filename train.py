@@ -24,7 +24,7 @@ class Multiple_evaluation:
 
     def cost_func(self, params: array):
         cf = CostFunction()
-        self.net.update_with_flattened_w_and_b(params)
+        self.net.update_with_flattened_weights(params)
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
         y_pred = []
@@ -40,7 +40,7 @@ class Multiple_evaluation:
         popsize=1000,
         sigma0=0.1,
     ):
-        params_init = get_flattened_ws_bs(self.net.layers)
+        params_init = get_flattened_weights(self.net.layers)
 
         es = cma.CMAEvolutionStrategy(
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
@@ -95,7 +95,7 @@ def multiple_test(
     )
     x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
     print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
-    neural_net.update_with_flattened_w_and_b(resultx)
+    neural_net.update_with_flattened_weights(resultx)
     y_best_neural_network = results_cls.get_values_for_X(x_values)
     label = "sigma=" + str(sigma) + " pop=" + str(population)
     plt.plot(x_values, y_best_neural_network, "r", label=label)
