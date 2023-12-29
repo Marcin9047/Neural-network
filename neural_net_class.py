@@ -17,7 +17,7 @@ class CostFunction:
         return np.sum(self.get_cost(y_pref, a_output))
 
     def get_deriv_cost_to_a_output(self, y_pref, a_output):
-        return 2 * (a_output - y_pref)
+        return y_pref - a_output
 
 
 class Neural_net:
@@ -33,9 +33,9 @@ class Neural_net:
 
         self.input_size = list_of_layers[0].previous_layer_size
 
-    def calculate_output(self, x: array):
+    def calculate_output(self, xIn: array):
         # Przepepuszcza aktywacje przez wszystkie warstwy i zwraca aktywację ostatniej warstwy
-        a = x
+        a = xIn
         activations = []
         activations.append(a)
         for ix, layer in enumerate(self.layers):
@@ -43,6 +43,38 @@ class Neural_net:
             activations.append(a)
         self.activations_hist.append(activations)
         return a
+
+    def backpropagation(self, yexp):
+        grad_lists = []
+        grad_lists.append(self.output_grad(yexp))
+        num = len(self.layers) - 2
+        for ind in range(num, -1):
+            grad_lists.append(self.inner_grad(ind))
+        return grad_lists  # Lista gradientów 1 wymiar = warstwa od końca 2 wymiar = neurony po kolei
+
+    def inner_grad(self, layerInd):
+        aIn = self.layers[layerInd].last_activation
+        output = self.layers[layerInd].compute_output(aIn)
+        act_deriv = np.dot(output, 1 - output)
+        delta_part = np.dot(self.layers[layerInd + 1].w, self.last_delta)
+        delta = np.dot(delta_part, act_deriv)
+        self.last_delta = delta
+        inner_grad = np.dot(output, delta)
+        return inner_grad
+
+    def output_grad(
+        self, yexp
+    ):  # aIn - wejściowy x do warstwy yex = wartość oczekiwana
+        # input_layer = self.layers[-2]
+        aIn = self.layers[-1].last_activation
+        output = self.layers[-1].compute_output(aIn)
+        cost = CostFunction()
+        lose_deriv = cost.get_deriv_cost_to_a_output(yexp, output)
+        act_deriv = np.dot(output, 1 - output)  # pochodna funkcji aktywacji
+        delta = np.dot(act_deriv, lose_deriv)
+        self.last_delta = delta
+        output_grad = np.dot(output, delta)
+        return output_grad  # Gradient ostatni, zmienia ostatnie wagi
 
     def update_with_flattened_bias(self, flattened_bias: array):
         # zmienia biasy warstw na te podane w wektorze biasów wszystkich warstw

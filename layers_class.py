@@ -21,6 +21,7 @@ class LayerBase:
         self.previous_layer_size = size
         self.w_size = (self.previous_layer_size, self.neuron_size)
         self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
+        self.wT = self.w.T
         self.full_size_of_w = self.neuron_size * self.previous_layer_size
 
     def compute_deriv_w(self, arguments_todo) -> array:

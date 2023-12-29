@@ -27,11 +27,13 @@ class Multiple_evaluation:
         self.net.update_with_flattened_w_and_b(params)
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
+        self.exp = y_list
         y_pred = []
         for x in x_list:
             y_pred.append(self.net.calculate_output(x)[0][0])
         cost = cf.get_cost(y_list, y_pred)
         val = np.sum(cost)
+
         return val
 
     def optimise_with_evolutions(
@@ -46,6 +48,8 @@ class Multiple_evaluation:
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
         )
         es.optimize(self.cost_func)
+        test = self.net.backpropagation(self.exp)
+        print(len(test[0][0][0]))
         # print(es.result)
         return es.result.xbest, es.result
 
@@ -125,13 +129,13 @@ if __name__ == "__main__":
     l4 = LayerBase(5, fl)
     l_out = LayerBase(1, fl)
 
-    nr_of_samples = 30
-    imax = 300
+    nr_of_samples = 5
+    imax = 100
     population_size = 50
-    sigma = 0.3
+    sigma = 0.75
     char_size = (-5, 5)
 
-    opt_function = linear_function
+    opt_function = task_function
     n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
 
     multiple_test(
