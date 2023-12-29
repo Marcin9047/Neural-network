@@ -50,14 +50,19 @@ class Neural_net:
             Y.append(self.calculate_output(x))
         return Y
 
-    def backpropagate_w(self, cost_deriv):
+    def backpropagate(self, cost_deriv):
         dws = [None for i in self.layers]
+        dbs = [None for i in self.layers]
+
         dc = cost_deriv
         for i in range(self.layer_number):
             j = (self.layer_number - i) - 1
-            dc = self.layers[j].compute_deriv_w_after_s(dc)
-            dws[j] = dc
-        return dws
+            dws[j] = self.layers[j].compute_deriv_cost_after_w(dc)
+            dbs[j] = self.layers[j].compute_deriv_cost_after_b(dc)
+
+            dc = self.layers[j].compute_deriv_cost_after_this_layer(dc)
+
+        return dws, dbs
 
     def update_with_weights(self, weights: List[array]):
         for i in range(self.layer_number):

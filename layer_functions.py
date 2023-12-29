@@ -4,13 +4,13 @@ from typing import List, Tuple, Callable
 
 
 class BaseLayerFunction:
-    def get_output(self, value: array):
+    def get_output(self, z: array):
         # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}
 
-        return value
+        return z
 
-    def get_function_derivative(self, value: array):
-        return value
+    def get_function_derivative(self, z: array):
+        return z
 
     # def reverse_output(self, output_activation: array, weights: array, bias: array):
     #     output_activation -= bias
@@ -19,12 +19,12 @@ class BaseLayerFunction:
 
 
 class SigmoidFunction(BaseLayerFunction):
-    def get_output(self, value: array):
-        val_exp = 1 / (1 + np.exp(-value))
+    def get_output(self, z: array):
+        val_exp = 1 / (1 + np.exp(-z))
         return np.array(val_exp)
 
-    def get_function_derivative(self, value: array):
-        val_exp = 1 / (1 + np.exp(-value))
+    def get_function_derivative(self, z: array):
+        val_exp = 1 / (1 + np.exp(-z))
         return np.array(val_exp * (1 - val_exp))
 
     # def get_derivative_after_w(self, weights: array, bias: array, dC: array):
