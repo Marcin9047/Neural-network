@@ -22,6 +22,8 @@ class LayerBase:
     def set_previous_size(self, size):
         self.previous_layer_size = size
         self.w_size = (self.previous_layer_size, self.neuron_size)
+        # self.w_size = (self.neuron_size, self.previous_layer_size)
+
         self.w = np.random.normal(loc=0, scale=1, size=self.w_size)
         self.full_size_of_w = self.neuron_size * self.previous_layer_size
 
@@ -32,13 +34,13 @@ class LayerBase:
         func_prim = self.activation_function.get_function_derivative(self.last_z)
         # az_prim = np.dot(self.last_activation, func_prim)
         # cost_after_w = np.dot(az_prim, deriv_cost_after_next_layer)
-        v1 = np.dot(func_prim, deriv_cost_after_next_layer)
-        v2 = np.dot(v1, self.last_activation)
+        v1 = np.multiply(func_prim, deriv_cost_after_next_layer)
+        v2 = np.dot(np.transpose(self.last_activation), v1)
         return v2
 
     def compute_deriv_cost_after_b(self, deriv_cost_after_next_layer: array) -> array:
         func_prim = self.activation_function.get_function_derivative(self.last_z)
-        cost_after_b = np.dot(func_prim, deriv_cost_after_next_layer)
+        cost_after_b = np.multiply(func_prim, deriv_cost_after_next_layer)
         return cost_after_b
 
     def compute_deriv_cost_after_this_layer(
@@ -47,36 +49,9 @@ class LayerBase:
         func_prim = self.activation_function.get_function_derivative(self.last_z)
         # wz_prim = np.dot(self.w, func_prim.T)
         # cost_after_layer = np.dot(deriv_cost_after_next_layer.T, wz_prim)
-        v1 = np.dot(func_prim, deriv_cost_after_next_layer)
-        v2 = np.dot(self.w, v1)
+        v1 = np.multiply(func_prim, deriv_cost_after_next_layer)
+        v2 = np.dot(v1, self.w.T)
         return v2
-
-    def compute_deriv_w_after_s(self, next_layer_deriv_w_after_s: array) -> array:
-        pass
-        # # @TODO Na razie oblicza wpływ poszczególnych wag na koszt w ostatniej warstwie,
-        # # nie uwzględnia funkcji obliczającej tylko wstępnie oblicza ten wpływ.
-        # wector_of_activ = np.zeros(self.neuron_size)
-        # for i, activation_deriv_layer_per_n in enumerate(next_layer_deriv_w_after_s):
-        #     wector_of_activ[i] = np.sum(activation_deriv_layer_per_n)
-
-        # new_deriv = np.zeros(self.w_size)
-
-        # wector_of_activ = self.activation_function.get_function_derivative(
-        #     wector_of_activ
-        # )
-
-        # for i_n in range(self.neuron_size):
-        #     for i_a in range(self.previous_layer_size):
-        #         new_deriv[i_a][i_n] = self.w[i_a][i_n] * wector_of_activ[i_n]
-
-        # # normalize
-        # fullstuff = np.sum(np.abs(self.w))
-        # # fullstuff = np.sum((self.w))
-
-        # new_deriv = new_deriv / fullstuff
-        # # der = self.activation_function.get_function_derivative(new_deriv)
-
-        # return new_deriv
 
     def compute_output(self, a0: array):
         # oblicza output warstwy na podstawie wejścia z outputu poprzedniej warstwy
