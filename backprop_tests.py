@@ -3,7 +3,12 @@ from numpy import array
 import numpy as np
 from typing import Callable, Tuple, List
 from neural_net_class import Neural_net, CostFunction
-from layer_functions import SigmoidFunction, BaseLayerFunction
+from layer_functions import (
+    SigmoidFunction,
+    BaseLayerFunction,
+    ReluFunction,
+    TanHFunction,
+)
 from matplotlib import pyplot as plt
 import cma
 from type_converters import *
@@ -30,12 +35,12 @@ def compose_many_gradients(w_derivs: List[List[array]]) -> List[array]:
 if __name__ == "__main__":
     from tqdm import tqdm
 
-    train_size = 1
-    x = [i / 10 for i in range(train_size)]
-    y = [(i**2) for i in x]
+    train_size = 10
+    x = np.linspace(0, 3, train_size)
+    y = np.sin(x)
 
     fs = SigmoidFunction()
-    fl = BaseLayerFunction()
+    fl = ReluFunction()
 
     l1 = LayerBase(5, fl)
     l2 = LayerBase(10, fs)
@@ -58,9 +63,9 @@ if __name__ == "__main__":
     print(y)
     print(n_test.calculate_output_for_many_values(x))
     cf = CostFunction()
-    B = 1
-    learn_rate = 0.995
-    iter_nr = 100
+    B = 0.001
+    learn_rate = 0.999
+    iter_nr = 10000
     cost_hist = []
     value_hist = []
     B_descenting = B

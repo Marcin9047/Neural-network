@@ -5,17 +5,27 @@ from typing import List, Tuple, Callable
 
 class BaseLayerFunction:
     def get_output(self, z: array):
-        # print(f"w:\n{weights}\nactivation:\n{input_activation}\nbias\n{bias}
-
         return z
 
     def get_function_derivative(self, z: array):
         return z
 
-    # def reverse_output(self, output_activation: array, weights: array, bias: array):
-    #     output_activation -= bias
-    #     input_activation_reconstructed = np.linalg.solve(weights, output_activation)
-    #     return input_activation_reconstructed
+
+class ReluFunction(BaseLayerFunction):
+    def get_output(self, z: array):
+        return np.where(z < 0, 0, z)
+
+    def get_function_derivative(self, z: array):
+        return np.where(z < 0, 0, 1)
+
+
+class TanHFunction(BaseLayerFunction):
+    def get_output(self, z: array):
+        return 2 / (1 + np.exp(-2 * z)) - 1
+
+    def get_function_derivative(self, z: array):
+        fout = 2 / (1 + np.exp(-2 * z)) - 1
+        return 1 - (fout**2)
 
 
 class SigmoidFunction(BaseLayerFunction):
