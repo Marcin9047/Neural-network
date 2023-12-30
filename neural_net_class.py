@@ -74,35 +74,33 @@ class Neural_net:
         grad_lists = []
         grad_lists.append(self.output_grad(yexp))
         num = len(self.layers) - 2
-        for ind in reversed(range(num + 1)):
+        for ind in reversed(range(1, num + 1)):
             grad_lists.append(self.inner_grad(ind))
         return grad_lists  # Lista gradientów 1 wymiar = warstwa od końca 2 wymiar = neurony po kolei
 
     def inner_grad(self, layerInd):
         output = self.layers[layerInd].last_output
         output_back = self.layers[layerInd - 1].last_output
-        inner_grad = np.zeros(len(output))
+        inner_grad = np.zeros(len(output_back[0][0]))
         new_delta = 0
         for ind, one in enumerate(output):
             output_back1 = output_back[ind][0]
-            ones_vector = np.ones(len(one.T))
-            act1 = np.dot(np.subtract(ones_vector, one.T), one.T)
-            delta_part = np.dot(self.layers[layerInd + 1].w, self.last_delta)
-            if len(delta_part[0]) != len(act1.T):
-                delta1 = np.dot(act1.T, delta_part)
-            else:
-                delta1 = np.dot(act1, delta_part.T)
-            new_delta += delta1
-            out_matrix = []
-            for i in range(len(one.T)):
-                out_matrix.append(output_back1.T)
-            out_matrix = np.array(out_matrix)
-            inner_grad1 = np.dot(delta1, out_matrix)
-            inner_grad = [a + b for a, b in zip(inner_grad, inner_grad1)]
+            act1 = self.transfer_derivative(one)
+            delta_part = np.dot(self.last_delta, self.layers[layerInd + 1].w.T)
+            error = delta_part * act1
+
+            new_delta += error
+            inner_grad1 = np.dot(
+                np.reshape(output_back1, (len(output_back1), 1)), error
+            )
+            inner_grad = self.sum_arrays(inner_grad, inner_grad1)
         self.last_delta = new_delta / len(output)
         return [
-            a / len(output) for a in inner_grad[0]
+            a / len(output) for a in inner_grad
         ]  # Gradient ostatni, zmienia ostatnie wagi
+
+    def transfer_derivative(self, output):
+        return output * (1.0 - output)
 
     def output_grad(
         self, yexp
@@ -110,24 +108,29 @@ class Neural_net:
         # input_layer = self.layers[-2]
         output = self.layers[-1].last_output
         output_back = self.layers[-2].last_output
-        output_grad = np.zeros(len(output))
+        output_grad = np.zeros(len(output_back[0][0]))
         self.last_delta = 0
         for ind, one in enumerate(output):
             output_back1 = output_back[ind]
             cost = CostFunction()
+
             lose_deriv = cost.get_deriv_cost_to_a_output(yexp[ind], one)
-            ones_vector = np.ones(len(one))
-            act_deriv = np.dot(
-                np.subtract(ones_vector, one), one
-            )  # pochodna funkcji aktywacji
-            delta = np.dot(lose_deriv, act_deriv)
-            self.last_delta += delta
-            output_grad1 = np.dot(delta, output_back1)
-            output_grad = [a + b for a, b in zip(output_grad, output_grad1)]
+            act_deriv = self.transfer_derivative(one)
+            error = lose_deriv * act_deriv
+
+            self.last_delta += error
+            output_grad1 = np.dot(output_back1.T, error)
+            output_grad = self.sum_arrays(output_grad, output_grad1)
         self.last_delta = self.last_delta / len(output)
         return [
-            a / len(output) for a in output_grad[0]
+            a / len(output) for a in output_grad
         ]  # Gradient ostatni, zmienia ostatnie wagi
+
+    def sum_arrays(self, first, second):
+        new = []
+        for i in range(len(first)):
+            new.append(first[i] + second[i])
+        return new
 
     def update_with_flattened_bias(self, flattened_bias: array):
         # zmienia biasy warstw na te podane w wektorze biasów wszystkich warstw
