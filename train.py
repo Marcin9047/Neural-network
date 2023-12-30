@@ -7,6 +7,7 @@ from layer_functions import SigmoidFunction, BaseLayerFunction
 from matplotlib import pyplot as plt
 import cma
 from type_converters import *
+from activation_class import Activation_function
 
 
 class Multiple_evaluation:
@@ -48,8 +49,8 @@ class Multiple_evaluation:
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
         )
         es.optimize(self.cost_func)
-        test = self.net.backpropagation(self.exp)
-        print(len(test[0][0][0]))
+        # test = self.net.backpropagation(self.exp)
+        # print(len(test[0][0][0]))
         # print(es.result)
         return es.result.xbest, es.result
 
@@ -103,7 +104,13 @@ def multiple_test(
     y_best_neural_network = results_cls.get_values_for_X(x_values)
     label = "sigma=" + str(sigma) + " pop=" + str(population)
     plt.plot(x_values, y_best_neural_network, "r", label=label)
-    plt.plot(x_values, y_best_neural_network, "r+")
+    # plt.plot(x_values, y_best_neural_network, "r+")
+
+    x_pred = np.linspace(char_size[0], char_size[1], nr_of_samples)
+    y_pred = []
+    for one in x_pred:
+        y_pred.append(neural_net.calculate_output(one)[0][0])
+    plt.plot(x_pred, y_pred, "go")
 
     plt.legend()
     title = (
@@ -120,7 +127,7 @@ def multiple_test(
 
 
 if __name__ == "__main__":
-    fs = SigmoidFunction()
+    fs = Activation_function("logistic")
     fl = BaseLayerFunction()
 
     l1 = LayerBase(5, fl)
@@ -129,8 +136,8 @@ if __name__ == "__main__":
     l4 = LayerBase(5, fl)
     l_out = LayerBase(1, fl)
 
-    nr_of_samples = 5
-    imax = 100
+    nr_of_samples = 50
+    imax = 1000
     population_size = 50
     sigma = 0.75
     char_size = (-5, 5)

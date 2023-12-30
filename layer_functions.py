@@ -16,11 +16,6 @@ class BaseLayerFunction:
     def get_deriv_output_to_w_input_a(self, stuff):
         pass
 
-    # def reverse_output(self, output_activation: array, weights: array, bias: array):
-    #     output_activation -= bias
-    #     input_activation_reconstructed = np.linalg.solve(weights, output_activation)
-    #     return input_activation_reconstructed
-
 
 class SigmoidFunction(BaseLayerFunction):
     def get_output(self, weights: array, input_activation: array, bias: array):
@@ -28,3 +23,5 @@ class SigmoidFunction(BaseLayerFunction):
         value += bias
         val_exp = 1 / (1 + np.exp(-value))
         return np.array(val_exp)
+
+    # def get_deriv(self):
