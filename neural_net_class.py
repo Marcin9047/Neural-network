@@ -81,18 +81,28 @@ class Neural_net:
     def inner_grad(self, layerInd):
         output = self.layers[layerInd].last_output
         output_back = self.layers[layerInd - 1].last_output
-        act_deriv = []
-        for one in output:
+        inner_grad = np.zeros(len(output))
+        new_delta = 0
+        for ind, one in enumerate(output):
+            output_back1 = output_back[ind][0]
             ones_vector = np.ones(len(one.T))
-            act1 = np.dot(
-                np.subtract(ones_vector, one.T), one.T
-            )  # pochodna funkcji aktywacji
-            act_deriv.append(act1)
-        delta_part = np.dot(self.layers[layerInd + 1].w, self.last_delta[0][0])  #
-        delta = np.dot(act_deriv, delta_part[0])
-        self.last_delta = delta
-        inner_grad = np.dot(delta, output_back)
-        return inner_grad
+            act1 = np.dot(np.subtract(ones_vector, one.T), one.T)
+            delta_part = np.dot(self.layers[layerInd + 1].w, self.last_delta)
+            if len(delta_part[0]) != len(act1.T):
+                delta1 = np.dot(act1.T, delta_part)
+            else:
+                delta1 = np.dot(act1, delta_part.T)
+            new_delta += delta1
+            out_matrix = []
+            for i in range(len(one.T)):
+                out_matrix.append(output_back1.T)
+            out_matrix = np.array(out_matrix)
+            inner_grad1 = np.dot(delta1, out_matrix)
+            inner_grad = [a + b for a, b in zip(inner_grad, inner_grad1)]
+        self.last_delta = new_delta / len(output)
+        return [
+            a / len(output) for a in inner_grad[0]
+        ]  # Gradient ostatni, zmienia ostatnie wagi
 
     def output_grad(
         self, yexp
@@ -100,20 +110,24 @@ class Neural_net:
         # input_layer = self.layers[-2]
         output = self.layers[-1].last_output
         output_back = self.layers[-2].last_output
-        cost = CostFunction()
-        lose_deriv = cost.average_deriv(yexp, output)
-
-        act_deriv = []
-        for one in output:
+        output_grad = np.zeros(len(output))
+        self.last_delta = 0
+        for ind, one in enumerate(output):
+            output_back1 = output_back[ind]
+            cost = CostFunction()
+            lose_deriv = cost.get_deriv_cost_to_a_output(yexp[ind], one)
             ones_vector = np.ones(len(one))
-            act1 = np.dot(
+            act_deriv = np.dot(
                 np.subtract(ones_vector, one), one
             )  # pochodna funkcji aktywacji
-            act_deriv.append(act1)
-        delta = np.dot(lose_deriv, act_deriv)
-        self.last_delta = delta
-        output_grad = np.dot(delta, output_back)
-        return output_grad[0]  # Gradient ostatni, zmienia ostatnie wagi
+            delta = np.dot(lose_deriv, act_deriv)
+            self.last_delta += delta
+            output_grad1 = np.dot(delta, output_back1)
+            output_grad = [a + b for a, b in zip(output_grad, output_grad1)]
+        self.last_delta = self.last_delta / len(output)
+        return [
+            a / len(output) for a in output_grad[0]
+        ]  # Gradient ostatni, zmienia ostatnie wagi
 
     def update_with_flattened_bias(self, flattened_bias: array):
         # zmienia biasy warstw na te podane w wektorze biasów wszystkich warstw
