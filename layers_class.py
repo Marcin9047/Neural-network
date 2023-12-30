@@ -26,10 +26,15 @@ class LayerBase:
         self.full_size_of_w = self.neuron_size * self.previous_layer_size
 
     def compute_deriv_cost_after_w(self, deriv_cost_after_next_layer: array) -> array:
+        # func_prim = self.activation_function.get_function_derivative(self.last_z)
+        # az_prim = np.dot(self.last_activation.T, func_prim)
+        # cost_after_w = np.dot(az_prim, deriv_cost_after_next_layer)
         func_prim = self.activation_function.get_function_derivative(self.last_z)
-        az_prim = np.dot(self.last_activation.T, func_prim)
-        cost_after_w = np.dot(az_prim, deriv_cost_after_next_layer)
-        return cost_after_w
+        # az_prim = np.dot(self.last_activation, func_prim)
+        # cost_after_w = np.dot(az_prim, deriv_cost_after_next_layer)
+        v1 = np.dot(func_prim, deriv_cost_after_next_layer)
+        v2 = np.dot(v1, self.last_activation)
+        return v2
 
     def compute_deriv_cost_after_b(self, deriv_cost_after_next_layer: array) -> array:
         func_prim = self.activation_function.get_function_derivative(self.last_z)
@@ -40,9 +45,11 @@ class LayerBase:
         self, deriv_cost_after_next_layer: array
     ) -> array:
         func_prim = self.activation_function.get_function_derivative(self.last_z)
-        wz_prim = np.dot(self.w, func_prim.T)
-        cost_after_layer = np.dot(deriv_cost_after_next_layer.T, wz_prim)
-        return cost_after_layer.T
+        # wz_prim = np.dot(self.w, func_prim.T)
+        # cost_after_layer = np.dot(deriv_cost_after_next_layer.T, wz_prim)
+        v1 = np.dot(func_prim, deriv_cost_after_next_layer)
+        v2 = np.dot(self.w, v1)
+        return v2
 
     def compute_deriv_w_after_s(self, next_layer_deriv_w_after_s: array) -> array:
         pass
