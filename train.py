@@ -28,6 +28,7 @@ class Multiple_evaluation:
         self.net.update_with_flattened_w_and_b(params)
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
+        self.x_test = x_list
         self.exp = y_list
         y_pred = []
         for x in x_list:
@@ -49,8 +50,8 @@ class Multiple_evaluation:
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
         )
         es.optimize(self.cost_func)
-        # test = self.net.backpropagation(self.exp)
-        # print(len(test[0][0][0]))
+        self.net.calculate_multiple_output(self.x_test)
+        test = self.net.backpropagation(self.exp)
         # print(es.result)
         return es.result.xbest, es.result
 
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     l_out = LayerBase(1, fl)
 
     nr_of_samples = 50
-    imax = 1000
+    imax = 10
     population_size = 50
     sigma = 0.75
     char_size = (-5, 5)

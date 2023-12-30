@@ -47,6 +47,14 @@ class LayerBase:
         self.last_output = value
         return value
 
+    def compute_multiple_output(self, aIn):
+        result = []
+        for one in aIn:
+            value = self.compute_output(one)
+            result.append(value)
+        self.last_output = result
+        return result
+
     def update_w(self, new_w: array):
         self.w = new_w
 
