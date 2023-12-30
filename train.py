@@ -7,7 +7,6 @@ from layer_functions import SigmoidFunction, BaseLayerFunction
 from matplotlib import pyplot as plt
 import cma
 from type_converters import *
-from activation_class import Activation_function
 
 
 class Multiple_evaluation:
@@ -25,7 +24,7 @@ class Multiple_evaluation:
 
     def cost_func(self, params: array):
         cf = CostFunction()
-        self.net.update_with_flattened_w_and_b(params)
+        self.net.update_with_flattened_weights(params)
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
         self.x_test = x_list
@@ -35,7 +34,6 @@ class Multiple_evaluation:
             y_pred.append(self.net.calculate_output(x)[0][0])
         cost = cf.get_cost(y_list, y_pred)
         val = np.sum(cost)
-
         return val
 
     def optimise_with_evolutions(
@@ -44,14 +42,12 @@ class Multiple_evaluation:
         popsize=1000,
         sigma0=0.1,
     ):
-        params_init = get_flattened_ws_bs(self.net.layers)
+        params_init = get_flattened_weights(self.net.layers)
 
         es = cma.CMAEvolutionStrategy(
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
         )
         es.optimize(self.cost_func)
-        self.net.calculate_multiple_output(self.x_test)
-        test = self.net.backpropagation(self.exp)
         # print(es.result)
         return es.result.xbest, es.result
 
@@ -60,6 +56,14 @@ class Multiple_evaluation:
         for x in X:
             Y.append(float(self.net.calculate_output(x)))
         return Y
+
+    def gradient_training(self, learn_rate, imax):
+        for i in range(imax):
+            self.net.calculate_multiple_output(self.x_test)
+            gradients = self.net.backpropagation(self.exp)
+            for num, layer in enumerate(reversed(self.net.layers[:-2])):
+                self.net.layers[num].w -= np.multiply(gradients[num], learn_rate).T
+        print("wyszło")
 
 
 def extra_sin_function(x):
@@ -99,19 +103,14 @@ def multiple_test(
         population,
         sigma,
     )
+    results_cls.gradient_training(0.7, 10000)
     x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
     print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
-    neural_net.update_with_flattened_w_and_b(resultx)
+    neural_net.update_with_flattened_weights(resultx)
     y_best_neural_network = results_cls.get_values_for_X(x_values)
     label = "sigma=" + str(sigma) + " pop=" + str(population)
     plt.plot(x_values, y_best_neural_network, "r", label=label)
-    # plt.plot(x_values, y_best_neural_network, "r+")
-
-    x_pred = np.linspace(char_size[0], char_size[1], nr_of_samples)
-    y_pred = []
-    for one in x_pred:
-        y_pred.append(neural_net.calculate_output(one)[0][0])
-    plt.plot(x_pred, y_pred, "go")
+    plt.plot(x_values, y_best_neural_network, "r+")
 
     plt.legend()
     title = (
@@ -128,7 +127,7 @@ def multiple_test(
 
 
 if __name__ == "__main__":
-    fs = Activation_function("logistic")
+    fs = SigmoidFunction()
     fl = BaseLayerFunction()
 
     l1 = LayerBase(5, fl)
@@ -137,10 +136,10 @@ if __name__ == "__main__":
     l4 = LayerBase(5, fl)
     l_out = LayerBase(1, fl)
 
-    nr_of_samples = 50
-    imax = 10
+    nr_of_samples = 30
+    imax = 2
     population_size = 50
-    sigma = 0.75
+    sigma = 0.3
     char_size = (-5, 5)
 
     opt_function = task_function
