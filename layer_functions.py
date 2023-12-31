@@ -8,7 +8,7 @@ class BaseLayerFunction:
         return z
 
     def get_function_derivative(self, z: array):
-        return z
+        return 1
 
 
 class ReluFunction(BaseLayerFunction):

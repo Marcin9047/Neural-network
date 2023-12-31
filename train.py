@@ -131,7 +131,7 @@ if __name__ == "__main__":
     sigma = 0.3
     char_size = (-5, 5)
 
-    opt_function = linear_function
+    opt_function = task_function
     n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
 
     multiple_test(

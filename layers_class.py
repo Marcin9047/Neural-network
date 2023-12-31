@@ -12,8 +12,8 @@ class LayerBase:
     ):
         self.neuron_size = neuron_size
         self.activation_function = wraping_function
-        # self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
-        self.b = np.zeros(shape=self.neuron_size)
+        self.b = np.random.normal(loc=0, scale=1, size=self.neuron_size)
+        # self.b = np.zeros(shape=self.neuron_size)
 
         self.b_size = self.neuron_size
         self.last_activation = None
@@ -68,8 +68,8 @@ class LayerBase:
 
     def update_b(self, new_bias: array):
         #  Updateuje bias na podstawie płaskiego wektora biasów
-        if len(self.b) != len(new_bias):
-            raise ValueError(
-                "there are different number of bias_n than in the old bias"
-            )
+        # if len(self.b) != len(new_bias):
+        #     raise ValueError(
+        #         "there are different number of bias_n than in the old bias"
+        #     )
         self.b = new_bias
