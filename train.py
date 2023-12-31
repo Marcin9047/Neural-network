@@ -58,11 +58,14 @@ class Multiple_evaluation:
         return Y
 
     def gradient_training(self, learn_rate, imax):
-        for i in range(imax):
-            self.net.calculate_multiple_output(self.x_test)
-            gradients = self.net.backpropagation(self.exp)
-            for num, layer in enumerate(reversed(self.net.layers[:-2])):
-                self.net.layers[num].w -= np.multiply(gradients[num], learn_rate).T
+        for num, layer in enumerate(reversed(self.net.layers[:-2])):
+            num1 = len(self.net.layers) - 1 - num
+            for i in range(imax):
+                self.net.calculate_multiple_output(self.x_test)
+                w_grad, b_grad = self.net.backpropagation(self.exp)
+                self.net.layers[num1].w -= np.multiply(w_grad[num], learn_rate)
+                # self.net.layers[num1].b += np.multiply(b_grad[num], learn_rate)[0]
+                # print(gradients)
         print("wyszło")
 
 
@@ -87,7 +90,7 @@ def multiple_test(
 
     x_values = np.linspace(char_size[0], char_size[1], 1000)
     y_values = function(x_values)
-    plt.plot(x_values, y_values, label="function")
+    # plt.plot(x_values, y_values, label="function")
 
     # neural_net.update_with_flattened_w_and_b(first_ws_bs)
 
@@ -103,7 +106,7 @@ def multiple_test(
         population,
         sigma,
     )
-    results_cls.gradient_training(0.7, 10000)
+    results_cls.gradient_training(0.6, 1000)
     x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
     print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
     neural_net.update_with_flattened_weights(resultx)
@@ -137,12 +140,12 @@ if __name__ == "__main__":
     l_out = LayerBase(1, fl)
 
     nr_of_samples = 30
-    imax = 2
+    imax = 1
     population_size = 50
     sigma = 0.3
     char_size = (-5, 5)
 
-    opt_function = task_function
+    opt_function = linear_function
     n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
 
     multiple_test(

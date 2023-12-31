@@ -72,11 +72,19 @@ class Neural_net:
 
     def backpropagation(self, yexp):
         grad_lists = []
-        grad_lists.append(self.output_grad(yexp))
+        b_grad = []
+        output = self.output_grad(yexp)
+        grad_lists.append(output[0])
+        b_grad.append(output[1])
         num = len(self.layers) - 2
         for ind in reversed(range(1, num + 1)):
-            grad_lists.append(self.inner_grad(ind))
-        return grad_lists  # Lista gradientów 1 wymiar = warstwa od końca 2 wymiar = neurony po kolei
+            output = self.inner_grad(ind)
+            grad_lists.append(output[0])
+            b_grad.append(output[1])
+        return (
+            grad_lists,
+            b_grad,
+        )  # Lista gradientów 1 wymiar = warstwa od końca 2 wymiar = neurony po kolei
 
     def inner_grad(self, layerInd):
         output = self.layers[layerInd].last_output
@@ -97,7 +105,7 @@ class Neural_net:
         self.last_delta = new_delta / len(output)
         return [
             a / len(output) for a in inner_grad
-        ]  # Gradient ostatni, zmienia ostatnie wagi
+        ], self.last_delta  # Gradient ostatni, zmienia ostatnie wagi
 
     def transfer_derivative(self, output):
         return output * (1.0 - output)
