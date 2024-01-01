@@ -16,7 +16,7 @@ class ReluFunction(BaseLayerFunction):
         return np.where(z < 0, 0, z)
 
     def get_function_derivative(self, z: array):
-        return np.where(z < 0, 0, 1)
+        return np.where(z < 0, 0.1, 1)
 
 
 class TanHFunction(BaseLayerFunction):

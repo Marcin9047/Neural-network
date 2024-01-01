@@ -175,29 +175,33 @@ def compare_initial_settings(B_list, lr_list, iter_testing, nt: Neural_net):
 if __name__ == "__main__":
     from tqdm import tqdm
     from train import task_function
+    from scipy import optimize
 
+    ending_beta_scalar = 0.1
     train_size = 50
     X = np.linspace(-5, 5, train_size)
     Y = task_function(X)
-    test_iter = 25
+    test_iter = 10
+    rel_train = 10000
+    lr = np.power(ending_beta_scalar, (1 / rel_train))
+    print(lr)
     fs = SigmoidFunction()
-    frl = BaseLayerFunction()
+    frl = ReluFunction()
     ftan = TanHFunction()
+    fl = BaseLayerFunction()
 
     l1 = LayerBase(5, frl)
     l2 = LayerBase(10, fs)
     l3 = LayerBase(10, fs)
-    l35 = LayerBase(10, fs)
-    l4 = LayerBase(5, frl)
-    l_out = LayerBase(1, frl)
+    l_out = LayerBase(1, fl)
 
-    n_test = Neural_net([l1, l2, l3, l35, l4, l_out], 1)
+    n_test = Neural_net([l1, l2, l_out], 1)
     B_list = np.logspace(-20, -1, 50)
     original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
     cf = CostFunction()
     cs = compare_initial_settings(
         B_list,
-        [0.99, 0.99999],
+        [lr],
         test_iter,
         n_test,
     )
@@ -210,7 +214,7 @@ if __name__ == "__main__":
     print("best:", cs[0])
     print(best_b, best_lr)
     neural_network, cost_hist = gradient_descent(
-        best_b, best_lr, 1000, n_test, X, Y, cf
+        best_b, best_lr, rel_train, n_test, X, Y, cf
     )
     # print(calculate_training_initial_best_angle(cost_hist))
     plt.plot(cost_hist)
