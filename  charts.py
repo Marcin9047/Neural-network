@@ -56,8 +56,9 @@ if __name__ == "__main__":
     from train import task_function
     from scipy import optimize
     from copy import deepcopy
+    import timeit
 
-    train_size = 1000
+    train_size = 200
     X = np.linspace(-10, 10, train_size)
     Y = task_function(X)
     cf = CostFunction()
@@ -68,7 +69,7 @@ if __name__ == "__main__":
     fl = BaseLayerFunction()
 
     iter_number = 1000
-    evo_to_grad_scalar = 1
+    evo_to_grad_scalar = 10
     planned_tests = [
         [10, ftan, ftan, "tanh", "tanh"],
         [50, ftan, ftan, "tanh", "tanh"],
@@ -88,23 +89,32 @@ if __name__ == "__main__":
         func_2_explain = test[4]
         explanation_of_try = f"__{iter_number}iterations_{nr_of_neurons}{func_1_explain}x{nr_of_neurons}{func_2_explain}x1lin-layers"
 
-        n_test = create_2_mid_layer_nn(10, (mid_func1, mid_func2), fl)
+        n_test = create_2_mid_layer_nn(nr_of_neurons, (mid_func1, mid_func2), fl)
 
         original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
         spg = GradientSolverParams(iter_number, X, Y, cf)
         spe = EvolutionarySolverParams((iter_number / evo_to_grad_scalar), X, Y, cf)
+
+        t1 = timeit.default_timer()
         srg = gradient_descent_with_initial_step_optimisation(deepcopy(n_test), spg)
+        t_delta_grad = timeit.default_timer() - t1
+
+        t1 = timeit.default_timer()
         es = EvolutionarySolver(deepcopy(n_test), spe)
         sre = es.optimise_with_evolutions()
+        t_delta_evo = timeit.default_timer() - t1
+
         print(test)
         n_g = srg.neural_network
-        print("gradient", srg.best_cost)
+
+        print(f"gradient best_cost = {srg.best_cost},  time = {t_delta_grad}")
         n_g.update_with_weights(srg.best_weights)
         n_g.update_with_biases(srg.best_biases)
         plt.plot(srg.cost_hist, label="Gradient descent cost")
 
         n_e = sre.neural_network
         print("Evolutionary", sre.best_cost)
+        print(f"Evolutionary best_cost = {sre.best_cost},  time = {t_delta_evo}")
         n_e.update_with_weights(sre.best_weights)
         n_e.update_with_biases(sre.best_biases)
         # plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
