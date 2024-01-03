@@ -91,26 +91,3 @@ class EvolutionarySolver:
         for x in X:
             Y.append(float(self.net.calculate_output(x)))
         return Y
-
-
-if __name__ == "__main__":
-    fs = SigmoidFunction()
-    fl = BaseLayerFunction()
-
-    l1 = LayerBase(5, fl)
-    l2 = LayerBase(10, fs)
-    l3 = LayerBase(10, fs)
-    l4 = LayerBase(5, fl)
-    l_out = LayerBase(1, fl)
-    n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
-    nr_of_samples = 200
-    imax = 1000
-    population_size = 50
-    sigma = 0.3
-    char_size = (-10, 10)
-
-    opt_function = task_function
-
-    multiple_test(
-        n_test, opt_function, char_size, nr_of_samples, imax, population_size, sigma
-    )

@@ -193,7 +193,7 @@ def compare_initial_settings(
     from copy import deepcopy
 
     tests = []
-    for B in tqdm(B_list):
+    for B in tqdm(B_list, leave=False):
         n_test = deepcopy(nt)
         sr = gradient_descent(
             B,

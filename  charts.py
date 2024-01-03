@@ -57,7 +57,7 @@ if __name__ == "__main__":
     from scipy import optimize
     from copy import deepcopy
 
-    train_size = 200
+    train_size = 1000
     X = np.linspace(-10, 10, train_size)
     Y = task_function(X)
     cf = CostFunction()
@@ -68,57 +68,79 @@ if __name__ == "__main__":
     fl = BaseLayerFunction()
 
     iter_number = 1000
-    evo_to_grad_scalar = 5
-    nr_of_neurons = 10
-    mid_func = ftan
+    evo_to_grad_scalar = 1
+    planned_tests = [
+        [10, ftan, ftan, "tanh", "tanh"],
+        [50, ftan, ftan, "tanh", "tanh"],
+        [100, ftan, ftan, "tanh", "tanh"],
+        [10, fs, fs, "sig", "sig"],
+        [50, fs, fs, "sig", "sig"],
+        [100, fs, fs, "sig", "sig"],
+        [50, fs, ftan, "sig", "tanh"],
+        [50, ftan, fs, "tanh", "sig"],
+    ]
+    for test in tqdm(planned_tests):
+        nr_of_neurons = test[0]
+        mid_func1 = test[1]
+        mid_func2 = test[2]
 
-    n_test = create_2_mid_layer_nn(10, (mid_func, mid_func), fl)
+        func_1_explain = test[3]
+        func_2_explain = test[4]
+        explanation_of_try = f"__{iter_number}iterations_{nr_of_neurons}{func_1_explain}x{nr_of_neurons}{func_2_explain}x1lin-layers"
 
-    original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
-    spg = GradientSolverParams(iter_number, X, Y, cf)
-    spe = EvolutionarySolverParams((iter_number / evo_to_grad_scalar), X, Y, cf)
-    srg = gradient_descent_with_initial_step_optimisation(deepcopy(n_test), spg)
-    es = EvolutionarySolver(deepcopy(n_test), spe)
-    sre = es.optimise_with_evolutions()
+        n_test = create_2_mid_layer_nn(10, (mid_func1, mid_func2), fl)
 
-    n_g = srg.neural_network
-    print("gradient", srg.best_cost)
-    n_g.update_with_weights(srg.best_weights)
-    n_g.update_with_biases(srg.best_biases)
-    plt.plot(srg.cost_hist, label="cost Gradient descent")
+        original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
+        spg = GradientSolverParams(iter_number, X, Y, cf)
+        spe = EvolutionarySolverParams((iter_number / evo_to_grad_scalar), X, Y, cf)
+        srg = gradient_descent_with_initial_step_optimisation(deepcopy(n_test), spg)
+        es = EvolutionarySolver(deepcopy(n_test), spe)
+        sre = es.optimise_with_evolutions()
+        print(test)
+        n_g = srg.neural_network
+        print("gradient", srg.best_cost)
+        n_g.update_with_weights(srg.best_weights)
+        n_g.update_with_biases(srg.best_biases)
+        plt.plot(srg.cost_hist, label="Gradient descent cost")
 
-    n_e = sre.neural_network
-    print("Evolutionary", sre.best_cost)
-    n_e.update_with_weights(sre.best_weights)
-    n_e.update_with_biases(sre.best_biases)
-    # plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
-    # plt.plot(gradient_note["beta_history"], label="beta")
-    plt.legend()
-    plt.semilogy()
-    plt.xlabel("iteration")
-    plt.ylabel("cost")
-    plt.title("Function Aproximation training")
-    plt.show()
+        n_e = sre.neural_network
+        print("Evolutionary", sre.best_cost)
+        n_e.update_with_weights(sre.best_weights)
+        n_e.update_with_biases(sre.best_biases)
+        # plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
+        # plt.plot(gradient_note["beta_history"], label="beta")
+        plt.legend()
+        plt.semilogy()
+        plt.xlabel("iteration")
+        plt.ylabel("cost")
+        plt.title("Function Aproximation training")
+        path = "cost" + explanation_of_try + ".png"
+        plt.savefig(path)
 
-    plt.plot(X, Y, label="function")
-    plt.plot(
-        X,
-        [float(i) for i in n_g.calculate_output_for_many_values(X)],
-        label="gradient descent",
-    )
-    plt.plot(
-        X,
-        [float(i) for i in n_e.calculate_output_for_many_values(X)],
-        label="evolutionary algoritm",
-    )
-    plt.plot(
-        X,
-        original_preds,
-        label="neural net before training",
-    )
+        plt.close()
 
-    plt.legend()
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title("Function Aproximation")
-    plt.show()
+        plt.plot(X, Y, label="function")
+        plt.plot(
+            X,
+            [float(i) for i in n_g.calculate_output_for_many_values(X)],
+            label="gradient descent",
+        )
+        plt.plot(
+            X,
+            [float(i) for i in n_e.calculate_output_for_many_values(X)],
+            label="evolutionary algoritm",
+        )
+        plt.plot(
+            X,
+            original_preds,
+            label="neural net before training",
+        )
+
+        plt.legend()
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.title("Function Aproximation")
+        path = "func_approx" + explanation_of_try + ".png"
+        plt.savefig(path)
+
+        plt.close()
