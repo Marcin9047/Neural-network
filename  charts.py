@@ -67,16 +67,16 @@ if __name__ == "__main__":
     ftan = TanHFunction()
     fl = BaseLayerFunction()
 
-    iter_number = 100
+    iter_number = 1000
+    evo_to_grad_scalar = 5
     nr_of_neurons = 10
     mid_func = ftan
 
     n_test = create_2_mid_layer_nn(10, (mid_func, mid_func), fl)
 
     original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
-
     spg = GradientSolverParams(iter_number, X, Y, cf)
-    spe = EvolutionarySolverParams(iter_number, X, Y, cf)
+    spe = EvolutionarySolverParams((iter_number / evo_to_grad_scalar), X, Y, cf)
     srg = gradient_descent_with_initial_step_optimisation(deepcopy(n_test), spg)
     es = EvolutionarySolver(deepcopy(n_test), spe)
     sre = es.optimise_with_evolutions()
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     print("Evolutionary", sre.best_cost)
     n_e.update_with_weights(sre.best_weights)
     n_e.update_with_biases(sre.best_biases)
-    plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
+    # plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
     # plt.plot(gradient_note["beta_history"], label="beta")
     plt.legend()
     plt.semilogy()
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     )
     plt.plot(
         X,
-        [float(i) for i in n_g.calculate_output_for_many_values(X)],
+        [float(i) for i in n_e.calculate_output_for_many_values(X)],
         label="evolutionary algoritm",
     )
     plt.plot(

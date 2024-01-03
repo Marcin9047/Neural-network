@@ -13,7 +13,6 @@ class EvolutionarySolverResults:
     def __init__(self):
         self.neural_network = None
         self.best_cost = None
-        self.cost_hist = None
         self.nr_of_iter = None
         self.best_weights = None
         self.best_biases = None
@@ -64,11 +63,14 @@ class EvolutionarySolver:
         params_init = get_flattened_ws_bs(self.net.layers)
         if max_iter is None:
             max_iter = self.sp.iteration_nr
+        if popsize is None:
+            popsize = self.sp.popsize
+        if sigma0 is None:
+            sigma0 = self.sp.sigma
         es = cma.CMAEvolutionStrategy(
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
         )
         es.optimize(self.cost_func)
-        # print(es.result)
         sr = EvolutionarySolverResults()
         self.net.update_with_flattened_w_and_b(es.result.xbest)
         # self.neural_network = None
@@ -81,7 +83,6 @@ class EvolutionarySolver:
         sr.neural_network = self.net
         sr.best_weights = get_weights(self.net.layers)
         sr.best_biases = get_biases(self.net.layers)
-        sr.cost_hist = es.result.evals_best
         print(es.result.evaluations)
         return sr
 
