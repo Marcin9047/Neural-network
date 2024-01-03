@@ -24,7 +24,7 @@ class Multiple_evaluation:
 
     def cost_func(self, params: array):
         cf = CostFunction()
-        self.net.update_with_flattened_weights(params)
+        self.net.update_with_flattened_w_and_b(params)
         x_list = np.linspace(self.limits[0], self.limits[1], self.nr_per_iter)
         y_list = self.function(x_list)
         y_pred = []
@@ -40,7 +40,7 @@ class Multiple_evaluation:
         popsize=1000,
         sigma0=0.1,
     ):
-        params_init = get_flattened_weights(self.net.layers)
+        params_init = get_flattened_ws_bs(self.net.layers)
 
         es = cma.CMAEvolutionStrategy(
             params_init, sigma0, {"popsize": popsize, "maxiter": max_iter}
@@ -71,7 +71,13 @@ def task_function(x):
 
 
 def multiple_test(
-    neural_net, function, char_size, nr_of_samples, max_iterations, population, sigma
+    neural_net: Neural_net,
+    function,
+    char_size,
+    nr_of_samples,
+    max_iterations,
+    population,
+    sigma,
 ):
     # first_ws_bs = get_flattened_ws_bs(neural_net.layers)
 
@@ -95,19 +101,20 @@ def multiple_test(
     )
     x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
     print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
-    neural_net.update_with_flattened_weights(resultx)
+    # neural_net.update_with_flattened_weights()
+    neural_net.update_with_flattened_w_and_b(resultx)
     y_best_neural_network = results_cls.get_values_for_X(x_values)
     label = "sigma=" + str(sigma) + " pop=" + str(population)
     plt.plot(x_values, y_best_neural_network, "r", label=label)
-    plt.plot(x_values, y_best_neural_network, "r+")
+    # plt.plot(x_values, y_best_neural_network, "r+")
 
     plt.legend()
     title = (
-        "Neural network function aproximation (samples:"
+        "Neural network function aproximation (samp:"
         + str(nr_of_samples)
         + " popsize:"
         + str(population)
-        + " iterations:"
+        + " iter:"
         + str(max_iterations)
         + ")"
     )
@@ -124,15 +131,14 @@ if __name__ == "__main__":
     l3 = LayerBase(10, fs)
     l4 = LayerBase(5, fl)
     l_out = LayerBase(1, fl)
-
-    nr_of_samples = 30
-    imax = 300
+    n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
+    nr_of_samples = 200
+    imax = 30
     population_size = 50
     sigma = 0.3
-    char_size = (-5, 5)
+    char_size = (-10, 10)
 
     opt_function = task_function
-    n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
 
     multiple_test(
         n_test, opt_function, char_size, nr_of_samples, imax, population_size, sigma
