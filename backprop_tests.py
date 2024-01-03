@@ -193,6 +193,8 @@ def calculate_training_initial_best_angle(cost_hist: List[float]) -> dict:
 
 
 def compare_initial_settings(
+    X,
+    Y,
     B_list: List[float],
     iter_testing: int,
     nt: Neural_net,
@@ -233,49 +235,6 @@ def compare_initial_settings(
         else:
             tests.append(test_note)
     return tests
-
-
-# def compare_initial_settings_var_step(
-#     init_B_list: List[float],
-#     iter_testing: int,
-#     nt: Neural_net,
-#     sample_size: int,
-#     learn_rate: float = 1,
-#     vary_step=False,
-# ):
-#     from copy import deepcopy
-
-#     tests = []
-#     for B in tqdm(B_list):
-#         n_test = deepcopy(nt)
-#         grad_note = gradient_descent(
-#             B,
-#             iter_testing,
-#             n_test,
-#             X,
-#             Y,
-#             cf,
-#             sample_size,
-#             var_step_size=vary_step,
-#             learn_rate=learn_rate,
-#         )
-#         angle_note = calculate_training_initial_best_angle(grad_note["cost_hist"])
-#         if angle_note["best_angle"] != 0:
-#             test_note = {
-#                 "B": B,
-#                 "lr": lr,
-#                 **angle_note,
-#                 "c_hist": grad_note["cost_hist"],
-#             }
-#         else:
-#             test_note = {"B": B, "lr": lr, **angle_note}
-#         if len(tests) == 0:
-#             tests.append(test_note)
-#         elif tests[0]["score"] < test_note["score"]:
-#             tests.insert(0, test_note)
-#         else:
-#             tests.append(test_note)
-#     return tests
 
 
 def choose_n_random_samples_from_training_data(
@@ -360,6 +319,8 @@ if __name__ == "__main__":
     original_preds = [float(i) for i in n_test.calculate_output_for_many_values(X)]
     cf = CostFunction()
     cs = compare_initial_settings(
+        X,
+        Y,
         B_list,
         test_iter,
         n_test,
@@ -377,6 +338,8 @@ if __name__ == "__main__":
     second_t = np.linspace(v1, v2, (secondary_tries - 1))
     second_t = [*list(second_t), best_b]
     cs = compare_initial_settings(
+        X,
+        Y,
         second_t,
         test_iter,
         n_test,

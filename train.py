@@ -99,6 +99,7 @@ def multiple_test(
         population,
         sigma,
     )
+    print(result.evaluations)
     x_values = np.linspace(char_size[0], char_size[1], nr_of_samples)
     print(f"sigma:{sigma}, pop:{population} = result {result.fbest}")
     # neural_net.update_with_flattened_weights()
@@ -133,7 +134,7 @@ if __name__ == "__main__":
     l_out = LayerBase(1, fl)
     n_test = Neural_net([l1, l2, l3, l4, l_out], 1)
     nr_of_samples = 200
-    imax = 30
+    imax = 1000
     population_size = 50
     sigma = 0.3
     char_size = (-10, 10)
