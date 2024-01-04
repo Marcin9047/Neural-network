@@ -53,7 +53,7 @@ def create_2_mid_layer_nn(
 
 if __name__ == "__main__":
     from tqdm import tqdm
-    from train import task_function
+    from copy_of_code.train import task_function
     from scipy import optimize
     from copy import deepcopy
     import timeit
@@ -68,17 +68,10 @@ if __name__ == "__main__":
     ftan = TanHFunction()
     fl = BaseLayerFunction()
 
-    iter_number = 1000
+    iter_number = 10000
     evo_to_grad_scalar = 10
     planned_tests = [
-        [10, ftan, ftan, "tanh", "tanh"],
-        [50, ftan, ftan, "tanh", "tanh"],
-        [100, ftan, ftan, "tanh", "tanh"],
-        [10, fs, fs, "sig", "sig"],
-        [50, fs, fs, "sig", "sig"],
-        [100, fs, fs, "sig", "sig"],
-        [50, fs, ftan, "sig", "tanh"],
-        [50, ftan, fs, "tanh", "sig"],
+        [500, ftan, ftan, "tanh", "tanh"],
     ]
     for test in tqdm(planned_tests):
         nr_of_neurons = test[0]
@@ -101,7 +94,7 @@ if __name__ == "__main__":
 
         t1 = timeit.default_timer()
         es = EvolutionarySolver(deepcopy(n_test), spe)
-        sre = es.optimise_with_evolutions()
+        # sre = es.optimise_with_evolutions()
         t_delta_evo = timeit.default_timer() - t1
 
         print(test)
@@ -112,13 +105,12 @@ if __name__ == "__main__":
         n_g.update_with_biases(srg.best_biases)
         plt.plot(srg.cost_hist, label="Gradient descent cost")
 
-        n_e = sre.neural_network
-        print("Evolutionary", sre.best_cost)
-        print(f"Evolutionary best_cost = {sre.best_cost},  time = {t_delta_evo}")
-        n_e.update_with_weights(sre.best_weights)
-        n_e.update_with_biases(sre.best_biases)
-        # plt.plot(sre.cost_hist, label="cost Evolutionary algoritm")
-        # plt.plot(gradient_note["beta_history"], label="beta")
+        # n_e = sre.neural_network
+        # print("Evolutionary", sre.best_cost)
+        # print(f"Evolutionary best_cost = {sre.best_cost},  time = {t_delta_evo}")
+        # n_e.update_with_weights(sre.best_weights)
+        # n_e.update_with_biases(sre.best_biases)
+
         plt.legend()
         plt.semilogy()
         plt.xlabel("iteration")
@@ -135,11 +127,11 @@ if __name__ == "__main__":
             [float(i) for i in n_g.calculate_output_for_many_values(X)],
             label="gradient descent",
         )
-        plt.plot(
-            X,
-            [float(i) for i in n_e.calculate_output_for_many_values(X)],
-            label="evolutionary algoritm",
-        )
+        # plt.plot(
+        #     X,
+        #     [float(i) for i in n_e.calculate_output_for_many_values(X)],
+        #     label="evolutionary algoritm",
+        # )
         plt.plot(
             X,
             original_preds,
